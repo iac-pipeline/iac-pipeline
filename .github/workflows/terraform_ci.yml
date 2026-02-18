@@ -6,6 +6,9 @@ on:
       branch:
         required: true
         type: string
+      # iac_tool:
+      #   required: true
+      #   type: string
     secrets:
       cloud_token:
         required: true
@@ -46,8 +49,15 @@ jobs:
         uses: gruntwork-io/terragrunt-action@v3
         with:
           tg_version: '0.99.1'
-          tf_path: "terraform"
-      
+          # {% if inputs.iac_tool == 'opentofu' %}
+          # tofu_version: "opentofu"
+          # {% endif %}
+
+      # - name: install terragrunt and open tofu
+      #   run: |
+      #     curl -L -o /usr/local/bin/terragrunt
+
+
       - name: install checkov
         run: pip install checkov
 
@@ -72,7 +82,7 @@ jobs:
         id: quality-check
         # do -sf  for a soft fail  https://www.checkov.io/2.Basics/Hard%20and%20soft%20fail.html
         # soft fail provides a exit code of 0 on faliure
-        run: checkov -f /tmp/tfplan.json --output sarif --output-file-path /tmp/
+        run: checkov -f /tmp/tfplan.json --output sarif --output-file-path /tmp/ -repo-root-for-plan-enrichment .
         continue-on-error: true
       
       # - name: Run Checkov action
