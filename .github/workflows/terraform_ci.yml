@@ -65,10 +65,10 @@ jobs:
           # please view:
       # https://www.checkov.io/8.Outputs/SARIF.html
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
-      # run all allows for terragrunt to check repo root
-      # - name: start plans for terragrunt
-      #   shell: bash
-      #   run: |
+      #run all allows for terragrunt to check repo root
+      - name: start plans for terragrunt
+        shell: bash
+        run: ./bash/create_checkov_output.sh
       #     echo "$PWD"
 
       #     echo "Starting Terraform code quality checks"
@@ -95,9 +95,9 @@ jobs:
       #     output_file_path: console,/tmp/results_sarif.sarif
       #   continue-on-error: true
 
-      - name: Run Checkov against Terraform code
-        run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
-        continue-on-error: true
+      # - name: Run Checkov against Terraform code
+      #   run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
+      #   continue-on-error: true
 
       - name: show sarif file
       # results_sarif.sarif is the default sarif file name generated
@@ -106,4 +106,4 @@ jobs:
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v4
         with:
-          sarif_file: /tmp/results_sarif.sarif
+          sarif_file: /tmp
