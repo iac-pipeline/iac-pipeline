@@ -86,7 +86,7 @@ jobs:
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
       - name: start plans for terragrunt
         shell: bash
-        run: .scripts/create_checkov_output.sh
+        run: scripts/create_checkov_output.sh
 
       - name: show sarif file
       # results_sarif.sarif is the default sarif file name generated
