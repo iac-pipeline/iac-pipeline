@@ -98,9 +98,10 @@ jobs:
           sarif_file: /tmp/results_sarif.sarif
       
   call-drift-detection:
+    needs: terraform-quality-checks
     uses: JamesB2204/iac-pipeline/.github/workflows/check_for_drift.yml@develop
     with:
       branch: ${{ inputs.branch }}
-      iac_technology: ${{ env.iac_technology}}
+      iac_technology: ${{ needs.terraform-quality-checks.outputs.iac_technology}}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
