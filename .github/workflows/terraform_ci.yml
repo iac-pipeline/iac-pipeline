@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: set iac environment as lowercase
         run: |
-          temp_iac_value="${{ inputs.iac_technology }}""
+          temp_iac_value="${{ inputs.iac_technology }}"
           echo "iac_technology=${temp_iac_value@L}" >> "${GITHUB_ENV}"
 
       - name: check iac technology is valid
