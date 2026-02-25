@@ -1,0 +1,29 @@
+name: drift-detection-check
+run-name: Checking drift for${{ github.actor }}
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+      # iac_tool:
+      #   required: true
+      #   type: string
+      iac_technology:
+        required: true
+        type: string
+    secrets:
+      cloud_token:
+        required: true
+env:
+  higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
+permissions:
+  contents: read 
+  security-events: write 
+  actions: read 
+jobs:
+  check_for_drift:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: hello
+        run: echo "hello world"
