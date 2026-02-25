@@ -9,19 +9,43 @@ on:
       # iac_tool:
       #   required: true
       #   type: string
+      iac_technology:
+        required: true
+        type: string
     secrets:
       cloud_token:
         required: true
 env:
-  higher_branch: ${{ inputs.branch == 'develop' && 'main' }}  
+  higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
 permissions:
   contents: read 
   security-events: write 
   actions: read 
 jobs:
+  initialise_workflow:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: set iac environment as lowercase
+        run: |
+          temp_iac_value="${{ inputs.iac_technology }}""
+          echo "iac_technology=${temp_iac_value@L}" >> "${GITHUB_ENV}"
+
+      - name: check iac technology is valid
+        run: |
+          iac_technology="${{ env.iac_technology }}"
+          if [[ "$iac_technology" == "terraform" || "$iac_technology" == "opentofu" ]]; then
+            echo "Utilising $iac_technology"
+          else
+            echo "::error ::Invalid IAC type provided, must be either terraform or opentofu"
+            exit 1
+          fi
+
+        
+
   terraform-quality-checks:
     runs-on: ubuntu-24.04
-    steps:   
+    steps:
+      
       - name: checkout lower branch
         uses: actions/checkout@v4
         with:
@@ -50,10 +74,6 @@ jobs:
         with:
           tg_version: '0.99.1'
           tf_path: "terraform"
-          # {% if inputs.iac_tool == 'opentofu' %}
-          # tofu_version: "opentofu"
-          # {% endif %}
-
       # - name: install terragrunt and open tofu
       #   run: |
       #     curl -L -o /usr/local/bin/terragrunt
@@ -65,39 +85,9 @@ jobs:
           # please view:
       # https://www.checkov.io/8.Outputs/SARIF.html
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
-      #run all allows for terragrunt to check repo root
       - name: start plans for terragrunt
         shell: bash
         run: ./bash/create_checkov_output.sh
-      #     echo "$PWD"
-
-      #     echo "Starting Terraform code quality checks"
-
-      #     terragrunt run --all init
-
-      #     terragrunt run --all --filter-affected -- plan  -out=/tmp/tfplan
-
-      #     terragrunt run --all -- show -json /tmp/tfplan > /tmp/tfplan.json
-      
-      # - name: run checkov against plan results
-      #   id: quality-check
-      #   # do -sf  for a soft fail  https://www.checkov.io/2.Basics/Hard%20and%20soft%20fail.html
-      #   # soft fail provides a exit code of 0 on faliure
-      #   run: checkov -f /tmp/tfplan.json --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
-      #   continue-on-error: true
-      
-      # - name: Run Checkov action
-      #   id: checkov
-      #   uses: bridgecrewio/checkov-action@master
-      #   with:
-      #     file: tmp/tfplan.json
-      #     output_format: cli,sarif
-      #     output_file_path: console,/tmp/results_sarif.sarif
-      #   continue-on-error: true
-
-      # - name: Run Checkov against Terraform code
-      #   run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
-      #   continue-on-error: true
 
       - name: show sarif file
       # results_sarif.sarif is the default sarif file name generated
