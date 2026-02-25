@@ -40,10 +40,9 @@ jobs:
             exit 1
           fi
 
-        
-
   terraform-quality-checks:
     runs-on: ubuntu-24.04
+    needs: initialise_workflow
     steps:
       
       - name: checkout lower branch
