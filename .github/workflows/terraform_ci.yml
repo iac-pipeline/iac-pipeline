@@ -45,14 +45,6 @@ jobs:
     needs: initialise_workflow
     steps:
 
-      - name: clone workflow repository
-        uses: actions/checkout@v4
-        with:
-          repository: iac-pipeline
-      
-      - name: clone workflow repository
-        uses: actions/checkout@v4
-
       - name: checkout lower branch
         uses: actions/checkout@v4
         with:
