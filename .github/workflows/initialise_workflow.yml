@@ -1,0 +1,24 @@
+on:
+  workflow_call:
+    inputs:
+        iac_technology:
+            required: true
+            type: string
+jobs:
+  initialise_workflow:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: set iac environment as lowercase
+        run: |
+          temp_iac_value="${{ inputs.iac_technology }}"
+          echo "iac_technology=${temp_iac_value@L}" >> "${GITHUB_ENV}"
+
+      - name: check iac technology is valid
+        run: |
+          iac_technology="${{ env.iac_technology }}"
+          if [[ "$iac_technology" == "terraform" || "$iac_technology" == "opentofu" ]]; then
+            echo "Utilising $iac_technology"
+          else
+            echo "::error ::Invalid IAC type provided, must be either terraform or opentofu"
+            exit 1
+          fi
