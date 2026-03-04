@@ -26,7 +26,6 @@ jobs:
     uses: iac-pipeline/iac-pipeline/.github/workflows/initialise_workflow.yml@develop
     with:
       iac_technology: ${{ inputs.iac_technology }}
-    id: call_initialise_workflow_job
 
   call_terraform_quality_checks:
     needs: call_initialise_workflow
@@ -37,7 +36,6 @@ jobs:
       higher_branch: ${{ needs.call_initialise_workflow_job.outputs.higher_branch }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
-    id: terraform-quality-checks
 
   call-drift-detection:
     needs: call_initialise_workflow
