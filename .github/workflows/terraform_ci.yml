@@ -15,8 +15,6 @@ on:
     secrets:
       cloud_token:
         required: true
-env:
-  higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
 
 permissions:
   contents: read 
@@ -36,13 +34,13 @@ jobs:
     with:
       branch: ${{ inputs.branch }}
       iac_technology: ${{ needs.call_initialise_workflow_job.outputs.iac_technology }}
-      higher_branch: ${{ env.higher_branch }}
+      higher_branch: ${{ needs.call_initialise_workflow_job.outputs.higher_branch }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
     id: terraform-quality-checks
 
   call-drift-detection:
-    needs: terraform-quality-checks
+    needs: call_initialise_workflow
     uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
     with:
       branch: ${{ inputs.branch }}

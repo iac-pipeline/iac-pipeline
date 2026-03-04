@@ -7,6 +7,9 @@ on:
 jobs:
   initialise_workflow:
     runs-on: ubuntu-24.04
+    outputs:
+      iac_technology: ${{ steps.set_iac_technology.outputs.iac_technology }}
+      higher_branch: ${{ steps.set_higher_branch.outputs.higher_branch }}
     steps:
       - name: set iac environment as lowercase
         run: |
@@ -22,3 +25,17 @@ jobs:
             echo "::error ::Invalid IAC type provided, must be either terraform or opentofu"
             exit 1
           fi
+      
+      - name: set output for iac technology
+        id: set_iac_technology
+        run: echo "iac_technology=${{ env.iac_technology }}" >> "$GITHUB_OUTPUT"
+      
+      - name: set higher branch
+        id: set_higher_branch
+        run: |
+          if [[ "${{ inputs.branch }}" == "develop" ]]; then
+            echo "higher_branch=main" >> $GITHUB_OUTPUT
+          else
+            echo "higher_branch=" >> $GITHUB_OUTPUT
+          fi
+      
