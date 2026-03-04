@@ -6,6 +6,9 @@ on:
       branch:
         required: true
         type: string
+      higher_branch:
+        required: false
+        type: string
       # iac_tool:
       #   required: true
       #   type: string
@@ -15,8 +18,8 @@ on:
     secrets:
       cloud_token:
         required: true
-env:
-  higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
+# env:
+#   higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
 permissions:
   contents: read 
   security-events: write 
