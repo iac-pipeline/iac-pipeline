@@ -26,4 +26,4 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: hello
-        run: echo "hello world"
+        run: echo ${{ inputs.iac_technology }}
