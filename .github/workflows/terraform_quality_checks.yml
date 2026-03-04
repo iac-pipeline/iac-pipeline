@@ -24,7 +24,6 @@ permissions:
 jobs:
   terraform-quality-checks:
     runs-on: ubuntu-24.04
-    needs: call_initialise_workflow
     steps:
 
       - name: checkout lower branch
