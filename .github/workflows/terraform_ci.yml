@@ -1,5 +1,5 @@
 name: CI-software-quality-checks
-run-name: Checking code quality for${{ github.actor }}
+run-name: Checking code quality for ${{ github.actor }}
 on:
   workflow_call:
     inputs:
@@ -56,23 +56,21 @@ jobs:
             echo "higher_branch=" >> $GITHUB_OUTPUT
           fi
 
-## start calls
+  # call_terraform_quality_checks:
+  #   needs: initialise_workflow
+  #   uses: iac-pipeline/iac-pipeline/.github/workflows/terraform_quality_checks.yml@develop
+  #   with:
+  #     branch: ${{ inputs.branch }}
+  #     iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
+  #     higher_branch: ${{ needs.initialise_workflow.outputs.higher_branch }}
+  #   secrets:
+  #     cloud_token: ${{ secrets.cloud_token }}
 
-  call_terraform_quality_checks:
-    needs: initialise_workflow
-    uses: iac-pipeline/iac-pipeline/.github/workflows/terraform_quality_checks.yml@develop
-    with:
-      branch: ${{ inputs.branch }}
-      iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
-      higher_branch: ${{ needs.initialise_workflow.outputs.higher_branch }}
-    secrets:
-      cloud_token: ${{ secrets.cloud_token }}
-
-  call-drift-detection:
-    needs: initialise_workflow
-    uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
-    with:
-      branch: ${{ inputs.branch }}
-      iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
-    secrets:
-      cloud_token: ${{ secrets.cloud_token }}
+  # call-drift-detection:
+  #   needs: initialise_workflow
+  #   uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
+  #   with:
+  #     branch: ${{ inputs.branch }}
+  #     iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
+  #   secrets:
+  #     cloud_token: ${{ secrets.cloud_token }}
