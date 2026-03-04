@@ -12,7 +12,9 @@ on:
       iac_technology:
         required: true
         type: string
-      
+      higher_branch:
+        required: true
+        type: string
     secrets:
       cloud_token:
         required: true
@@ -33,7 +35,7 @@ jobs:
           fetch-depth: 0
       
       - name: Fetch base branch
-        run: git fetch origin ${{ env.higher_branch }}:${{ env.higher_branch }}
+        run: git fetch origin ${{ inputs.higher_branch }}:${{ inputs.higher_branch }}
       
       - uses: 'google-github-actions/auth@v3'
         with:
