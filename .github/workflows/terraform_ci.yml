@@ -51,9 +51,9 @@ jobs:
         id: set_higher_branch
         run: |
           if [[ "${{ inputs.branch }}" == "develop" ]]; then
-            echo "higher_branch=main" >> $GITHUB_OUTPUT
+            echo "higher_branch=main" >> "$GITHUB_OUTPUT"
           else
-            echo "higher_branch=" >> $GITHUB_OUTPUT
+            echo "higher_branch=" >> "$GITHUB_OUTPUT"
           fi
 
   call_terraform_quality_checks:
