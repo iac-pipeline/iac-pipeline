@@ -22,6 +22,7 @@ permissions:
   actions: read 
 
 jobs:
+  #Define the variables for the workflow
   initialise_workflow:
     runs-on: ubuntu-24.04
     outputs:
@@ -32,7 +33,7 @@ jobs:
         run: |
           temp_iac_value="${{ inputs.iac_technology }}"
           echo "iac_technology=${temp_iac_value@L}" >> "${GITHUB_ENV}"
-
+        #ignore linter for env.iac_technology, it is defined in the echo statement
       - name: check iac technology is valid
         run: |
           iac_technology="${{ env.iac_technology }}"
@@ -55,6 +56,7 @@ jobs:
           else
             echo "higher_branch=" >> "$GITHUB_OUTPUT"
           fi
+      
 
   call_terraform_quality_checks:
     needs: initialise_workflow
