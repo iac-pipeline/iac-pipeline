@@ -103,7 +103,7 @@ jobs:
           # this is to check if there is any drift for the changed modules
           modules_changed=$(terragrunt find --filter-affected --format json | jq .)
 
-          ## chec if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
+          ## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
           if [ -z "$modules_changed" ] || [ "$modules_changed" == "[]" ]; then
             echo "No changes detected in the lower environment. Skipping drift detection."
             exit 0
