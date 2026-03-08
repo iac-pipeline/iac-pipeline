@@ -64,6 +64,7 @@ jobs:
           environment="dev"
 
           terragrunt run --all init
+          echo "Initialisation complete, checking for drift"
 
           modules_changed=$(terragrunt find --filter-affected --format json | jq .)
           echo "Modules changed: $modules_changed"
