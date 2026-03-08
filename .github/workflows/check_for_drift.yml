@@ -56,6 +56,7 @@ jobs:
       
       - name: check state of environment
         run: |
+          set -xe
           # change this value to fit for the higher environment, e.g. prod, staging, dev
 
           lower_environment="dev"
