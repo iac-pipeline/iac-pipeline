@@ -66,6 +66,7 @@ jobs:
           terragrunt run --all init
 
           modules_changed=$(terragrunt find --filter-affected --format json | jq .)
+          echo "Modules changed: $modules_changed"
 
           git checkout ${{ inputs.higher_branch }}
 
