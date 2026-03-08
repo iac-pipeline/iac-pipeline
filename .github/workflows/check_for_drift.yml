@@ -33,6 +33,10 @@ jobs:
         with:
           ref: ${{ inputs.higher_branch }}
           fetch-depth: 0
+      
+      - uses: 'google-github-actions/auth@v3'
+        with:
+          credentials_json: '${{ secrets.cloud_token }}'
 
       - name: Set up python 3.9
         uses: actions/setup-python@v4
@@ -56,7 +60,7 @@ jobs:
 
           environment="dev"
 
-          terragrunt run--all init
+          terragrunt run --all init
 
           git checkout ${{ inputs.branch }}
 
