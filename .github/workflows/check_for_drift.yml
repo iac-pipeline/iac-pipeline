@@ -60,8 +60,9 @@ jobs:
 
           environment="dev"
 
-          git fetch origin ${{ inputs.branch }}:${{ inputs.branch }}
-          git fetch origin ${{ inputs.higher_branch }}:${{ inputs.higher_branch }}
+          git fetch origin 
+
+          git branch -a
 
           terragrunt run --all init
 
