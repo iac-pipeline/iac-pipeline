@@ -34,16 +34,37 @@ jobs:
           ref: ${{ inputs.higher_branch }}
           fetch-depth: 0
 
+      - name: Set up python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      
+      - name: set up terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Install Terragrunt and OpenTofu
+        uses: gruntwork-io/terragrunt-action@v3
+        with:
+          tg_version: '0.99.1'
+          tf_path: "terraform"
+
       - name: check state of environment
         run: |
           # change this value to fit for the higher environment, e.g. prod, staging, dev
+
           environment="dev"
 
           git checkout ${{ inputs.branch }}
 
+          terragrunt init
+
           modules_changed=$(terragrunt find --filter-affected --format json | jq .)
 
           git checkout ${{ inputs.higher_branch }}
+
+          terragrunt init
 
           for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
               if [ -d "$module" ]; then
