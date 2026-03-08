@@ -60,14 +60,19 @@ jobs:
 
           environment="dev"
 
-          terragrunt run --all init
+          echo "Checking for drift between ${{ inputs.branch }} and ${{ inputs.higher_branch }} for environment: $environment"
+
 
           git checkout ${{ inputs.branch }}
 
 
           modules_changed=$(terragrunt find --filter-affected --format json | jq .)
 
+          echo "Modules changed: $modules_changed"
+
           git checkout ${{ inputs.higher_branch }}
+
+          terragrunt run --all init
 
 
           for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
