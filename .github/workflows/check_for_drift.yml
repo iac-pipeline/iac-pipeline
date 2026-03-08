@@ -60,7 +60,7 @@ jobs:
           # change this value to fit for the higher environment, e.g. prod, staging, dev
 
           lower_environment="dev"
-          higher_environment="prod"
+          higher_environment="dev"
 
           echo "Checking for drift between ${{ inputs.branch }} and ${{ inputs.higher_branch }} for environment: $environment"
 
@@ -70,7 +70,6 @@ jobs:
             for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
               if [ -d "$module" ]; then
 
-                  echo "Module $module exists. Planning module: $module"
                   terragrunt run --all --json-out-dir /tmp/$environment/json plan --working-dir "$module" -out-dir /tmp/tfplan
 
                   grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' /tmp/$environment/json/tfplan.json)    
