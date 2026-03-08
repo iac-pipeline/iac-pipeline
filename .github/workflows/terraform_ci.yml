@@ -73,6 +73,7 @@ jobs:
     uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
     with:
       branch: ${{ inputs.branch }}
+      higher_branch: ${{ needs.initialise_workflow.outputs.higher_branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}

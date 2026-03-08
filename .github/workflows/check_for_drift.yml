@@ -28,14 +28,11 @@ jobs:
   check_for_drift:
     runs-on: ubuntu-24.04
     steps:
-      - name: checkout lower branch
+      - name: checkout higher branch
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ inputs.higher_branch }}
           fetch-depth: 0
-      
-      - name: Fetch base branch
-        run: git fetch origin ${{ inputs.higher_branch }}:${{ inputs.higher_branch }}
       
       - uses: 'google-github-actions/auth@v3'
         with:
@@ -64,10 +61,11 @@ jobs:
           environment="dev"
 
           terragrunt run --all init
-          echo "Initialisation complete, checking for drift"
+
+          git checkout ${{ inputs.branch }}
+
 
           modules_changed=$(terragrunt find --filter-affected --format json | jq .)
-          echo "Modules changed: $modules_changed"
 
           git checkout ${{ inputs.higher_branch }}
 
