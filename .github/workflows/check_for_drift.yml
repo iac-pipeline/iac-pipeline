@@ -64,6 +64,8 @@ jobs:
 
           git checkout ${{ inputs.branch }}
 
+          git fetch origin ${{ inputs.higher_branch }}:${{ inputs.higher_branch }}
+
 
           modules_changed=$(terragrunt find --filter-affected --format json | jq .)
 
