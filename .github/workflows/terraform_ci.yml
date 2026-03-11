@@ -19,6 +19,10 @@ on:
       cloud_token:
         required: true
 
+env:
+  higher_branch: ${{ github.base_ref }}
+  pr_branch: ${{ github.head_ref }}
+
 permissions:
   contents: read 
   security-events: write 
@@ -42,8 +46,9 @@ jobs:
         run: |
           set -ex 
           echo "Branch: ${{ inputs.branch }}"
+          echo "standard branch ${{ env.pr_branch }}"
           echo "IAC Technology: ${{ inputs.iac_technology }}"
-          echo "Higher Branch: ${{ inputs.higher_branch }}"
+          echo "Higher Branch: ${{ env.higher_branch }}"
           echo "Environments: ${{ inputs.environments }}"
 
           echo "${{ inputs.environments}}" | yaml2json
