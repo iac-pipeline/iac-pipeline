@@ -3,6 +3,14 @@ run-name: Checking code quality for ${{ github.actor }}
 on:
   workflow_call:
     inputs:
+      higher_branch:
+        required: true
+        type: string
+        default: ${{ github.base_ref }}
+      branch:
+        required: true
+        type: string
+        default: ${{ github.head_ref }}
       # iac_tool:
       #   required: true
       #   type: string
@@ -15,10 +23,6 @@ on:
     secrets:
       cloud_token:
         required: true
-
-env:
-  higher_branch: ${{ github.base_ref }}
-  branch: ${{ github.head_ref }}
 
 permissions:
   contents: read 
@@ -43,8 +47,8 @@ jobs:
           set -ex 
           echo "Branch: ${{ inputs.branch }}"
           echo "IAC Technology: ${{ inputs.iac_technology }}"
-          echo "Standard Branch: ${{ env.branch }}"
-          echo "Higher Branch: ${{ env.higher_branch }}"
+          echo "Standard Branch: ${{ inputs.branch }}"
+          echo "Higher Branch: ${{ inputs.higher_branch }}"
           echo "Environments: ${{ inputs.environments }}"
 
           echo "${{ inputs.environments}}" | yaml2json
@@ -72,9 +76,9 @@ jobs:
     needs: initialise_workflow
     uses: iac-pipeline/iac-pipeline/.github/workflows/terraform_quality_checks.yml@develop
     with:
-      branch: ${{ env.branch }}
+      branch: ${{ inputs.branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
-      higher_branch: ${{ env.higher_branch }}
+      higher_branch: ${{ inputs.higher_branch }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
 
@@ -82,8 +86,8 @@ jobs:
     needs: initialise_workflow
     uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
     with:
-      branch: ${{ env.branch }}
-      higher_branch: ${{ env.higher_branch }}
+      branch: ${{ inputs.branch }}
+      higher_branch: ${{ inputs.higher_branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
