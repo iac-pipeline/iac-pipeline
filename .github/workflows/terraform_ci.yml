@@ -3,9 +3,6 @@ run-name: Checking code quality for ${{ github.actor }}
 on:
   workflow_call:
     inputs:
-      branch:
-        required: true
-        type: string
       # iac_tool:
       #   required: true
       #   type: string
@@ -21,7 +18,7 @@ on:
 
 env:
   higher_branch: ${{ github.base_ref }}
-  pr_branch: ${{ github.head_ref }}
+  branch: ${{ github.head_ref }}
 
 permissions:
   contents: read 
@@ -34,7 +31,6 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       iac_technology: ${{ steps.set_iac_technology.outputs.iac_technology }}
-      higher_branch: ${{ steps.set_higher_branch.outputs.higher_branch }}
     steps:
       - name: install yaml2json
         run: |
@@ -46,8 +42,8 @@ jobs:
         run: |
           set -ex 
           echo "Branch: ${{ inputs.branch }}"
-          echo "standard branch ${{ env.pr_branch }}"
           echo "IAC Technology: ${{ inputs.iac_technology }}"
+          echo "Standard Branch: ${{ env.branch }}"
           echo "Higher Branch: ${{ env.higher_branch }}"
           echo "Environments: ${{ inputs.environments }}"
 
@@ -71,29 +67,14 @@ jobs:
       - name: set output for iac technology
         id: set_iac_technology
         run: echo "iac_technology=${{ env.iac_technology }}" >> "$GITHUB_OUTPUT"
-      
-      - name: set higher branch
-        id: set_higher_branch
-        run: |
-          if [[ "${{ inputs.branch }}" == "develop" ]]; then
-            echo "higher_branch=main" >> "$GITHUB_OUTPUT"
-          else
-            echo "higher_branch=" >> "$GITHUB_OUTPUT"
-          fi
-      
-      - name: set environment variables for downstream jobs
-        run: |
-          echo "higher_branch=${{ needs.initialise_workflow.outputs.higher_branch }}" >> "${GITHUB_ENV}"
-          echo "iac_technology=${{ needs.initialise_workflow.outputs.iac_technology }}" >> "${GITHUB_ENV}"
-      
 
   call_terraform_quality_checks:
     needs: initialise_workflow
     uses: iac-pipeline/iac-pipeline/.github/workflows/terraform_quality_checks.yml@develop
     with:
-      branch: ${{ inputs.branch }}
+      branch: ${{ env.branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
-      higher_branch: ${{ needs.initialise_workflow.outputs.higher_branch }}
+      higher_branch: ${{ env.higher_branch }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
 
@@ -101,8 +82,8 @@ jobs:
     needs: initialise_workflow
     uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
     with:
-      branch: ${{ inputs.branch }}
-      higher_branch: ${{ needs.initialise_workflow.outputs.higher_branch }}
+      branch: ${{ env.branch }}
+      higher_branch: ${{ env.higher_branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
