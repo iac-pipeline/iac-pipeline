@@ -12,6 +12,9 @@ on:
       iac_technology:
         required: true
         type: string
+      environments:
+        required: true
+        type: string
     secrets:
       cloud_token:
         required: true
@@ -29,6 +32,13 @@ jobs:
       iac_technology: ${{ steps.set_iac_technology.outputs.iac_technology }}
       higher_branch: ${{ steps.set_higher_branch.outputs.higher_branch }}
     steps:
+      - name: show inputs
+        run: |
+          echo "Branch: ${{ inputs.branch }}"
+          echo "IAC Technology: ${{ inputs.iac_technology }}"
+          echo "Higher Branch: ${{ inputs.higher_branch }}"
+          echo "Environments: ${{ inputs.environments }}"
+          
       - name: set iac environment as lowercase
         run: |
           temp_iac_value="${{ inputs.iac_technology }}"
@@ -56,6 +66,11 @@ jobs:
           else
             echo "higher_branch=" >> "$GITHUB_OUTPUT"
           fi
+      
+      - name: set environment variables for downstream jobs
+        run: |
+          echo "higher_branch=${{ needs.initialise_workflow.outputs.higher_branch }}" >> "${GITHUB_ENV}"
+          echo "iac_technology=${{ needs.initialise_workflow.outputs.iac_technology }}" >> "${GITHUB_ENV}"
       
 
   call_terraform_quality_checks:
