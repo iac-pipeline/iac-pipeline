@@ -118,9 +118,9 @@ jobs:
               echo "Checking drift for modules: $modules_changed"
               terragrunt run --all init
               if check_module_status "$modules_changed" "$testing_environment"; then
-                echo "No drift detected on ${{ inputs.higher_branch }} for environment: $environment"
+                echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
               else
-                echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $environment"
+                echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
                 exit 1
               fi
             else
