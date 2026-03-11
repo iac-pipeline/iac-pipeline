@@ -38,7 +38,7 @@ jobs:
           echo "IAC Technology: ${{ inputs.iac_technology }}"
           echo "Higher Branch: ${{ inputs.higher_branch }}"
           echo "Environments: ${{ inputs.environments }}"
-          
+
       - name: set iac environment as lowercase
         run: |
           temp_iac_value="${{ inputs.iac_technology }}"
