@@ -59,8 +59,7 @@ jobs:
           set -xe
           # change this value to fit for the higher environment, e.g. prod, staging, dev
 
-          lower_environment="dev"
-          higher_environment="dev"
+          testing_environment="dev"
 
           echo "Checking for drift between ${{ inputs.branch }} and ${{ inputs.higher_branch }} for environment: $environment"
 
@@ -96,7 +95,7 @@ jobs:
             done
           }
 
-
+          # checkout the lower environment to test on develop branch
           git checkout ${{ inputs.branch }}
 
           # locates the modules that has been changed in the lower environment
@@ -104,29 +103,29 @@ jobs:
           modules_changed=$(terragrunt find --filter-affected --format json | jq .)
 
           ## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
-          if [ -z "$modules_changed" ] || [ "$modules_changed" == "[]" ]; then
+          if check_module_status "$modules_changed" "$testing_environment"; then
             echo "No changes detected in the lower environment. Skipping drift detection."
             exit 0
           else
-            echo "cheking plan for modules in $lower_environment"
-            if check_module_status "$modules_changed" "$lower_environment"; then
-              echo "No changes detected in the lower environment. Skipping drift detection."
+            echo "Changes detected in the lower environment. Checking for drift in higher environment."
+
+            echo "Modules changed: $modules_changed"
+
+            git checkout ${{ inputs.higher_branch }}
+            if [ -z "$modules_changed" ] || [ "$modules_changed" == "[]" ]; then
               exit 0
+
+              echo "Checking drift for modules: $modules_changed"
+              terragrunt run --all init
+              if check_module_status "$modules_changed" "$testing_environment"; then
+                echo "No drift detected on ${{ inputs.higher_branch }} for environment: $environment"
+              else
+                echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $environment"
+                exit 1
+              fi
             else
-              echo "Changes detected in the lower environment. Checking for drift in higher environment."
-
-                echo "Modules changed: $modules_changed"
-
-                git checkout ${{ inputs.higher_branch }}
-
-                echo "Checking drift for modules: $modules_changed"
-                terragrunt run --all init
-                if check_module_status "$modules_changed" "$higher_environment"; then
-                  echo "No drift detected"
-                else
-                  echo "Drift detected between ${{ inputs.branch }} and ${{ inputs.higher_branch }} for environment: $environment"
-                  exit 1
-                fi
+              echo "Creating new modules, no need to check for drift in higher environment."
+              exit 0
             fi
           fi
 
