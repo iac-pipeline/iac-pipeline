@@ -59,9 +59,9 @@ jobs:
           set -xe
           # change this value to fit for the higher environment, e.g. prod, staging, dev
 
-          testing_environment="test"
+          testing_environment="${{ inputs.higher_branch}}"
 
-          echo "Checking for drift between ${{ inputs.branch }} and ${{ inputs.higher_branch }} for environment: $environment"
+          echo "Checking for drift on ${{ inputs.higher_branch }} for environment: $environment"
 
           check_module_status() {
             local changes_modules_to_check="$1"
