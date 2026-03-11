@@ -59,7 +59,7 @@ jobs:
           set -xe
           # change this value to fit for the higher environment, e.g. prod, staging, dev
 
-          testing_environment="dev"
+          testing_environment="test"
 
           echo "Checking for drift between ${{ inputs.branch }} and ${{ inputs.higher_branch }} for environment: $environment"
 
