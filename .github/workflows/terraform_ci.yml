@@ -32,12 +32,21 @@ jobs:
       iac_technology: ${{ steps.set_iac_technology.outputs.iac_technology }}
       higher_branch: ${{ steps.set_higher_branch.outputs.higher_branch }}
     steps:
+      - name: install yaml2json
+        run: |
+          set -ex
+          sudo apt install yaml2json
+
+
       - name: show inputs
         run: |
+          set -ex 
           echo "Branch: ${{ inputs.branch }}"
           echo "IAC Technology: ${{ inputs.iac_technology }}"
           echo "Higher Branch: ${{ inputs.higher_branch }}"
           echo "Environments: ${{ inputs.environments }}"
+
+          echo "${{ inputs.environments}}" | yaml2json
 
       - name: set iac environment as lowercase
         run: |
