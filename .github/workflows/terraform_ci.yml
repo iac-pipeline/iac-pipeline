@@ -38,11 +38,15 @@ jobs:
       lower_environment: ${{ steps.set_environment_values.outputs.lower_environment }}
       higher_environment: ${{ steps.set_environment_values.outputs.higher_environment }}
     steps:
+      - name: check to run ci or cd
+        run: |
+          echo "${{ github.event.pull_request.merged }}"
+
+
       - name: install yaml2json
         run: |
           set -ex
           sudo apt install yaml2json
-
 
       - name: show inputs
         run: |
