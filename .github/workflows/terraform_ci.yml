@@ -37,12 +37,21 @@ jobs:
       iac_technology: ${{ steps.set_iac_technology.outputs.iac_technology }}
       lower_environment: ${{ steps.set_environment_values.outputs.lower_environment }}
       higher_environment: ${{ steps.set_environment_values.outputs.higher_environment }}
+      run_cd_checks: ${{ steps.step_register_to_run_ci_or_cd.outputs.run_cd_checks }}
     steps:
+
       - name: check to run ci or cd
+        id: step_register_to_run_ci_or_cd
         run: |
-          echo "${{ github.event.pull_request.merged }}"
-
-
+          echo "checking to run ci or cd"
+          if [ ${{ github.event.pull_request.merged }} == true ]; then
+            echo "This is a merged pull request, running CD checks"
+            echo "run_cd_checks=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "This is not a merged pull request, running CI checks"
+            echo "run_cd_checks=false" >> "${GITHUB_OUTPUT}"
+          fi
+          
       - name: install yaml2json
         run: |
           set -ex
@@ -83,8 +92,10 @@ jobs:
         id: set_iac_technology
         run: echo "iac_technology=${{ env.iac_technology }}" >> "$GITHUB_OUTPUT"
 
+  ##### ci steps #####
   call_terraform_quality_checks:
     needs: initialise_workflow
+    if: needs.initialise_workflow.outputs.run_cd_checks == 'false'
     uses: iac-pipeline/iac-pipeline/.github/workflows/terraform_quality_checks.yml@develop
     with:
       branch: ${{ inputs.branch }}
@@ -95,6 +106,7 @@ jobs:
 
   call-drift-detection:
     needs: initialise_workflow
+    if: needs.initialise_workflow.outputs.run_cd_checks == 'true'
     uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
     with:
       branch: ${{ inputs.branch }}
@@ -104,3 +116,9 @@ jobs:
       higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
+  ##### end of ci steps #####
+
+  ##### cd steps #####
+  
+
+  ### end of cd steps #####

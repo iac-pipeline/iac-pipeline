@@ -1,0 +1,47 @@
+name: check for drift
+run-name: Checking for drift for ${{ github.actor }}
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+
+permissions:
+  contents: read 
+  security-events: write 
+  actions: read 
+
+jobs:
+    apply_iac:
+        runs-on: ubuntu-24.04
+        steps:
+            - name: checkout code
+              uses: actions/checkout@v4
+              with:
+                ref: ${{ inputs.branch }}
+                fetch-depth: 0
+
+            - name: get the commit before merge for the diff
+              run: |
+                echo "Getting the commit before merge for the diff"
+                echo "COMMIT_BEFORE_MERGE=$(git rev-parse HEAD^1)" >> "$GITHUB_ENV"
+
+            - uses: 'google-github-actions/auth@v3'
+              with:
+                credentials_json: '${{ secrets.cloud_token }}'
+
+            - name: Set up python 3.9
+              uses: actions/setup-python@v4
+              with:
+                python-version: 3.9
+            
+            - name: set up terraform
+              uses: hashicorp/setup-terraform@v3
+              with:
+                terraform_version: "1.7.5"
+
+            - name: Install Terragrunt and OpenTofu
+              uses: gruntwork-io/terragrunt-action@v3
+              with:
+                tg_version: '0.99.1'
