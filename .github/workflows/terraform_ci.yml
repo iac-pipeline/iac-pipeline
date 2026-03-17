@@ -35,6 +35,8 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       iac_technology: ${{ steps.set_iac_technology.outputs.iac_technology }}
+      lower_environment: ${{ steps.set_environment_values.outputs.lower_environment }}
+      higher_environment: ${{ steps.set_environment_values.outputs.higher_environment }}
     steps:
       - name: install yaml2json
         run: |
@@ -50,8 +52,13 @@ jobs:
           echo "Standard Branch: ${{ inputs.branch }}"
           echo "Higher Branch: ${{ inputs.higher_branch }}"
           echo "Environments: ${{ inputs.environments }}"
-
-          echo "${{ inputs.environments}}" | yaml2json
+      
+      - name: set environment values
+        id: set_environment_values
+        run: |
+          input_json="$(echo "${{ inputs.environments}}" | yaml2json)"
+          echo "lower_environment=$(echo $input_json | jq -r --arg branch "${{ inputs.branch }}" '.[$branch]')" >> "${GITHUB_OUTPUT}"
+          echo "higher_environment=$(echo $input_json | jq -r --arg branch "${{ inputs.higher_branch }}" '.[$branch]')" >> "${GITHUB_OUTPUT}"
 
       - name: set iac environment as lowercase
         run: |
@@ -89,5 +96,7 @@ jobs:
       branch: ${{ inputs.branch }}
       higher_branch: ${{ inputs.higher_branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
+      lower_environment: ${{ needs.initialise_workflow.outputs.lower_environment }}
+      higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}

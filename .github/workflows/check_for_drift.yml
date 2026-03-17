@@ -15,6 +15,12 @@ on:
       iac_technology:
         required: true
         type: string
+      lower_environment:
+        required: true
+        type: string
+      higher_environment:
+        required: true
+        type: string
     secrets:
       cloud_token:
         required: true
@@ -59,7 +65,7 @@ jobs:
           set -xe
           # change this value to fit for the higher environment, e.g. prod, staging, dev
 
-          testing_environment="${{ inputs.higher_branch}}"
+          testing_environment="${{ inputs.higher_environment }}"
 
           echo "Checking for drift on ${{ inputs.higher_branch }} for environment: $environment"
 
