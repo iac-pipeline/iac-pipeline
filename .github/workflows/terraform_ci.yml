@@ -60,11 +60,6 @@ jobs:
           echo "lower_environment=$(echo $input_json | jq -r --arg branch "${{ inputs.branch }}" '.[$branch]')" >> "${GITHUB_OUTPUT}"
           echo "higher_environment=$(echo $input_json | jq -r --arg branch "${{ inputs.higher_branch }}" '.[$branch]')" >> "${GITHUB_OUTPUT}"
 
-          if [ -z "${{ needs.initialise_workflow.outputs.lower_environment }}" ] || [ -z "${{ needs.initialise_workflow.outputs.higher_environment }}" ]; then
-            echo "::error ::Invalid environment values provided, unable to parse lower and higher environment from the input"
-            exit 1
-          fi
-
       - name: set iac environment as lowercase
         run: |
           temp_iac_value="${{ inputs.iac_technology }}"
