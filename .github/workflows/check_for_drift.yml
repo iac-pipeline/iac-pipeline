@@ -112,20 +112,15 @@ jobs:
             echo "Modules changed: $modules_changed"
 
             git checkout ${{ inputs.higher_branch }}
-            if [ -z "$modules_changed" ] || [ "$modules_changed" == "[]" ]; then
-              exit 0
 
-              echo "Checking drift for modules: $modules_changed"
-              terragrunt run --all init
-              if check_module_status "$modules_changed" "$testing_environment"; then
-                echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
-              else
-                echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
-                exit 1
-              fi
-            else
-              echo "Creating new modules, no need to check for drift in higher environment."
+            echo "Checking drift for modules: $modules_changed"
+            terragrunt run --all init
+            if check_module_status "$modules_changed" "$testing_environment"; then
+              echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
               exit 0
+            else
+              echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
+              exit 1
             fi
           fi
 
