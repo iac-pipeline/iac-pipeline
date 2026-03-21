@@ -101,12 +101,12 @@ jobs:
               fi
             done
           }
-            
+
           # locates the modules that has been changed in the lower environment
           # this is to check if there is any drift for the changed modules
           # has a condition to chec wether a marge has been done, as if so checking between branches will fail.
           modules_changed=""
-          if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+          if [[ ${{ github.event.pull_request.merged }} == true ]]; then
             echo "This is a merged pull request"
             commit_before_merge=$(git rev-parse HEAD^1)
             echo "Commit before merge: $commit_before_merge"
@@ -121,8 +121,10 @@ jobs:
               fi
           else
             git checkout ${{ inputs.branch }}
+
             echo "This is not a merged pull request"
             modules_changed=$(terragrunt find --filter "[${{ inputs.higher_branch }} ... ${{ inputs.branch }}]" --format json | jq .)
+            
             ## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
             if check_module_status "$modules_changed" "$testing_environment"; then
               echo "No changes detected in the lower environment. Skipping drift detection."

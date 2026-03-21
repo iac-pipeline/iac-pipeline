@@ -48,6 +48,7 @@ jobs:
                 tg_version: '0.99.1'
             
             - name: apply iac
+              id: apply_iac
               run: |
                 set -ex
                 commit_before_merge=$(git rev-parse HEAD^1)
@@ -63,9 +64,17 @@ jobs:
                 for module in $modules_changes; do
                   if [[ -d "$module" ]] && [[ -f "$module/terragrunt.hcl" ]]; then
                     terragrunt run --all --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" -auto-approve
-                    command_status=$?
-                    echo $command_status
+                    echo "command_status=$?" >> "${GITHUB_OUTPUT}"
                   fi
                 done
                 echo "Modules changed: $modules_changes"
+              
+            - name: check apply status
+              run: |
+                if [[ "${{ steps.apply_iac.outputs.command_status }}" == "0" ]]; then
+                  echo "Apply successful for all modules"
+                else
+                  echo "::error ::Apply failed for one or more modules with exit code ${{ steps.apply_iac.outputs.command_status}}"
+                  exit 1
+                fi
 
