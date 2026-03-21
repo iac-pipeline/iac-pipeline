@@ -64,6 +64,7 @@ jobs:
         run: |
           set -xe
           # change this value to fit for the higher environment, e.g. prod, staging, dev
+          
 
           testing_environment="${{ inputs.higher_environment }}"
 
@@ -73,6 +74,7 @@ jobs:
             local changes_modules_to_check="$1"
             local environment="$2"
             for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
+              echo "Checking module: $module for drift"
               if [[ -d "$module" && -f "$module/terragrunt.hcl" ]]; then
 
                   terragrunt run --all --json-out-dir /tmp/$environment/json plan --working-dir "$module" -out-dir /tmp/tfplan
@@ -99,33 +101,50 @@ jobs:
               fi
             done
           }
-
-          # checkout the lower environment to test on develop branch
-          git checkout ${{ inputs.branch }}
-
+            
           # locates the modules that has been changed in the lower environment
           # this is to check if there is any drift for the changed modules
-          modules_changed=$(terragrunt find --filter-affected --format json | jq .)
+          # has a condition to chec wether a marge has been done, as if so checking between branches will fail.
+          modules_changed=""
+          if [[ "${{ github.event.pull_request.merged }}" == "true" ]]; then
+            echo "This is a merged pull request"
+            commit_before_merge=$(git rev-parse HEAD^1)
+            echo "Commit before merge: $commit_before_merge"
+            modules_changed=$(terragrunt run --all find --filter "[${{ inputs.higher_branch }} ... $commit_before_merge]" --format json | jq .)
 
-          ## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
-          if check_module_status "$modules_changed" "$testing_environment"; then
-            echo "No changes detected in the lower environment. Skipping drift detection."
-            exit 0
-          else
-            echo "Changes detected in the lower environment. Checking for drift in higher environment."
-
-            echo "Modules changed: $modules_changed"
-
-            git checkout ${{ inputs.higher_branch }}
-
-            echo "Checking drift for modules: $modules_changed"
-            terragrunt run --all init
             if check_module_status "$modules_changed" "$testing_environment"; then
-              echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
+                echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
+                exit 0
+            else
+                echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
+                exit 1
+              fi
+          else
+            git checkout ${{ inputs.branch }}
+            echo "This is not a merged pull request"
+            modules_changed=$(terragrunt find --filter "[${{ inputs.higher_branch }} ... ${{ inputs.branch }}]" --format json | jq .)
+            ## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
+            if check_module_status "$modules_changed" "$testing_environment"; then
+              echo "No changes detected in the lower environment. Skipping drift detection."
               exit 0
             else
-              echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
-              exit 1
+              echo "Changes detected in the lower environment. Checking for drift in higher environment."
+
+              echo "Modules changed: $modules_changed"
+
+              git checkout ${{ inputs.higher_branch }}
+
+              echo "Checking drift for modules: $modules_changed"
+
+              terragrunt run --all init
+
+              if check_module_status "$modules_changed" "$testing_environment"; then
+                echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
+                exit 0
+              else
+                echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
+                exit 1
+              fi
             fi
           fi
 
