@@ -9,6 +9,9 @@ on:
         production_environment:
             required: false
             type: string
+    secrets:
+        cloud_token:
+            required: true
 
 permissions:
   contents: read 
@@ -54,6 +57,8 @@ jobs:
                 for module in $modules_changes; do
                   if [ -d "$module" ] && [ -f "$module/terragrunt.hcl" ]; then
                     terragrunt run --all --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" -auto-approve
+                    command_status=$?
+                    echo $command_status
                   fi
                 done
                 echo "Modules changed: $modules_changes"

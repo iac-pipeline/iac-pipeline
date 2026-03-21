@@ -106,7 +106,6 @@ jobs:
 
   call-drift-detection:
     needs: initialise_workflow
-    if: needs.initialise_workflow.outputs.run_cd_checks == 'true'
     uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
     with:
       branch: ${{ inputs.branch }}
@@ -119,6 +118,16 @@ jobs:
   ##### end of ci steps #####
 
   ##### cd steps #####
-  
+  call-apply:
+    needs: initialise_workflow
+    if: needs.initialise_workflow.outputs.run_cd_checks == 'true'
+    uses: iac-pipeline/iac-pipeline/.github/workflows/apply_.yml@develop
+    with:
+      production_branch: ${{ inputs.higher_branch }}
+      production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
+    secrets:
+      cloud_token: ${{ secrets.cloud_token }}
+
+    
 
   ### end of cd steps #####
