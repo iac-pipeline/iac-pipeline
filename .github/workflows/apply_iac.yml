@@ -67,17 +67,22 @@ jobs:
 
                 for module in $modules_changes; do
                   if [[ -d "$module" ]] && [[ -f "$module/terragrunt.hcl" ]]; then
-                    terragrunt run --all --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" -auto-approve
+                    terragrunt run --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --out-dir /tmp/${{ inputs.production_environment }}/tfplan --auto-approve
                     echo "command_status=$?" >> "${GITHUB_OUTPUT}"
                   fi
                 done
                 echo "Modules changed: $modules_changes"
+              continue-on-error: true
               
             - name: check apply status
               run: |
                 if [[ "${{ steps.apply_iac.outputs.command_status }}" == "0" ]]; then
                   echo "Apply successful for all modules"
                 else
+                  # next step get flaiure details from the json output and print them in the logs, this will help with debugging and understanding why the apply failed without having to go to the cloud provider console
+                  for file in /tmp/${{ inputs.production_environment }}/json/*.json; do
+                    cat $file
+                  done
                   echo "::error ::Apply failed for one or more modules with exit code ${{ steps.apply_iac.outputs.command_status}}"
                   exit 1
                 fi
