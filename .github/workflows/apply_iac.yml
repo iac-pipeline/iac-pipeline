@@ -9,6 +9,9 @@ on:
         production_environment:
             required: false
             type: string
+        iac_technology:
+            required: true
+            type: string
     secrets:
         cloud_token:
             required: true
@@ -46,6 +49,7 @@ jobs:
               uses: gruntwork-io/terragrunt-action@v3
               with:
                 tg_version: '0.99.1'
+                tf_path: ${{ inputs.iac_technology }}
             
             - name: apply iac
               id: apply_iac

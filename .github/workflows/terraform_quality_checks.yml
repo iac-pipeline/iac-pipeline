@@ -55,7 +55,7 @@ jobs:
         uses: gruntwork-io/terragrunt-action@v3
         with:
           tg_version: '0.99.1'
-          tf_path: "terraform"
+          tf_path: ${{ inputs.iac_technology }}
       # - name: install terragrunt and open tofu
       #   run: |
       #     curl -L -o /usr/local/bin/terragrunt
