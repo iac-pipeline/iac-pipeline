@@ -112,6 +112,10 @@ jobs:
             echo "Commit before merge: $commit_before_merge"
             modules_changed=$(terragrunt find --filter "[${{ inputs.higher_branch }} ... $commit_before_merge]" --format json | jq .)
 
+            # The script needs to go checkout the commit from before the merge and do a plan
+            # if the checkout does not happen it wont detect wether a branch is new or not and will fail when it should pass
+            git checkout $commit_before_merge
+
             if check_module_status "$modules_changed" "$testing_environment"; then
                 echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
                 exit 0
