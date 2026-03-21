@@ -110,7 +110,7 @@ jobs:
             echo "This is a merged pull request"
             commit_before_merge=$(git rev-parse HEAD^1)
             echo "Commit before merge: $commit_before_merge"
-            modules_changed=$(terragrunt run --all find --filter "[${{ inputs.higher_branch }} ... $commit_before_merge]" --format json | jq .)
+            modules_changed=$(terragrunt run find --filter "[${{ inputs.higher_branch }} ... $commit_before_merge]" --format json | jq .)
 
             if check_module_status "$modules_changed" "$testing_environment"; then
                 echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
