@@ -73,7 +73,7 @@ jobs:
             local changes_modules_to_check="$1"
             local environment="$2"
             for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
-              if [ -d "$module" && -f "$module/terragrunt.hcl" ]; then
+              if [[ -d "$module" && -f "$module/terragrunt.hcl" ]]; then
 
                   terragrunt run --all --json-out-dir /tmp/$environment/json plan --working-dir "$module" -out-dir /tmp/tfplan
 
@@ -95,8 +95,7 @@ jobs:
                       fi
                   done
               else
-                  echo "Module $module does not exist in higher environment. Skipping validation."
-                  continue
+                  echo "Module $module does not exist in environment. Skipping validation."
               fi
             done
           }
