@@ -1,0 +1,81 @@
+name: Terraform Quality Checks
+run-name: Running quality checks for ${{ github.actor }}
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+      # iac_tool:
+      #   required: true
+      #   type: string
+      iac_technology:
+        required: true
+        type: string
+      higher_branch:
+        required: true
+        type: string
+    secrets:
+      cloud_token:
+        required: true
+permissions:
+  contents: read 
+  security-events: write 
+  actions: read 
+
+jobs:
+  terraform-quality-checks:
+    runs-on: ubuntu-24.04
+    steps:
+
+      - name: checkout lower branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+          fetch-depth: 0
+      
+      - name: Fetch base branch
+        run: git fetch origin ${{ inputs.higher_branch }}:${{ inputs.higher_branch }}
+      
+      - uses: 'google-github-actions/auth@v3'
+        with:
+          credentials_json: '${{ secrets.cloud_token }}'
+
+      - name: Set up python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      
+      - name: set up terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Install Terragrunt and OpenTofu
+        uses: gruntwork-io/terragrunt-action@v3
+        with:
+          tg_version: '0.99.1'
+          tf_path: "terraform"
+      # - name: install terragrunt and open tofu
+      #   run: |
+      #     curl -L -o /usr/local/bin/terragrunt
+
+
+      - name: install checkov
+        run: pip install checkov
+
+          # please view:
+      # https://www.checkov.io/8.Outputs/SARIF.html
+      # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
+      - name: Run Checkov against Terraform code
+        run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
+        continue-on-error: true
+
+      - name: show sarif file
+      # results_sarif.sarif is the default sarif file name generated
+        run:  cat /tmp/results_sarif.sarif | jq .
+      
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: /tmp/results_sarif.sarif

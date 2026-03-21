@@ -1,0 +1,131 @@
+name: drift-detection-check
+run-name: Checking drift for${{ github.actor }}
+on:
+  workflow_call:
+    inputs:
+      branch:
+        required: true
+        type: string
+      higher_branch:
+        required: false
+        type: string
+      # iac_tool:
+      #   required: true
+      #   type: string
+      iac_technology:
+        required: true
+        type: string
+      lower_environment:
+        required: true
+        type: string
+      higher_environment:
+        required: true
+        type: string
+    secrets:
+      cloud_token:
+        required: true
+# env:
+#   higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
+permissions:
+  contents: read 
+  security-events: write 
+  actions: read 
+jobs:
+  check_for_drift:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout higher branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.higher_branch }}
+          fetch-depth: 0
+      
+      - uses: 'google-github-actions/auth@v3'
+        with:
+          credentials_json: '${{ secrets.cloud_token }}'
+
+      - name: Set up python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      
+      - name: set up terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Install Terragrunt and OpenTofu
+        uses: gruntwork-io/terragrunt-action@v3
+        with:
+          tg_version: '0.99.1'
+          tf_path: "terraform"
+      
+      - name: check state of environment
+        run: |
+          set -xe
+          # change this value to fit for the higher environment, e.g. prod, staging, dev
+
+          testing_environment="${{ inputs.higher_environment }}"
+
+          echo "Checking for drift on ${{ inputs.higher_branch }} for environment: $environment"
+
+          check_module_status() {
+            local changes_modules_to_check="$1"
+            local environment="$2"
+            for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
+              if [[ -d "$module" && -f "$module/terragrunt.hcl" ]]; then
+
+                  terragrunt run --all --json-out-dir /tmp/$environment/json plan --working-dir "$module" -out-dir /tmp/tfplan
+
+                  grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' /tmp/$environment/json/tfplan.json)    
+                  
+                  # get all the actions from the tfplan json and loop through them, if any of them are not no-op then we have drift
+                  actions=$( jq -r '.resource_changes[].change.actions' /tmp/$environment/json/tfplan.json) 
+                  echo $actions
+                  for action in $( echo $actions | jq -r '.[]'); do
+                      if [[ "$action" == "no-op" ]]; then
+                          echo $action
+                          echo "No changes for module: $module"
+                      else
+                          #DRIFT DETECTED
+                          echo $action
+                          echo "Changes detected for module: $module"
+                          echo "Resources with changes: $grab_json_body"
+                          return 1
+                      fi
+                  done
+              else
+                  echo "Module $module does not exist in environment. Skipping validation."
+              fi
+            done
+          }
+
+          # checkout the lower environment to test on develop branch
+          git checkout ${{ inputs.branch }}
+
+          # locates the modules that has been changed in the lower environment
+          # this is to check if there is any drift for the changed modules
+          modules_changed=$(terragrunt find --filter-affected --format json | jq .)
+
+          ## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
+          if check_module_status "$modules_changed" "$testing_environment"; then
+            echo "No changes detected in the lower environment. Skipping drift detection."
+            exit 0
+          else
+            echo "Changes detected in the lower environment. Checking for drift in higher environment."
+
+            echo "Modules changed: $modules_changed"
+
+            git checkout ${{ inputs.higher_branch }}
+
+            echo "Checking drift for modules: $modules_changed"
+            terragrunt run --all init
+            if check_module_status "$modules_changed" "$testing_environment"; then
+              echo "No drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
+              exit 0
+            else
+              echo "::error ::Drift detected on ${{ inputs.higher_branch }} for environment: $testing_environment"
+              exit 1
+            fi
+          fi
+

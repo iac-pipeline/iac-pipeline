@@ -1,109 +1,133 @@
 name: CI-software-quality-checks
-run-name: Checking code quality for${{ github.actor }}
+run-name: Checking code quality for ${{ github.actor }}
 on:
   workflow_call:
     inputs:
-      branch:
-        required: true
+      higher_branch:
+        required: false
         type: string
+        default: ${{ github.base_ref }}
+      branch:
+        required: false
+        type: string
+        default: ${{ github.head_ref }}
       # iac_tool:
       #   required: true
       #   type: string
+      iac_technology:
+        required: true
+        type: string
+      environments:
+        required: true
+        type: string
     secrets:
       cloud_token:
         required: true
-env:
-  higher_branch: ${{ inputs.branch == 'develop' && 'main' }}  
+
 permissions:
   contents: read 
   security-events: write 
   actions: read 
+
 jobs:
-  terraform-quality-checks:
+  #Define the variables for the workflow
+  initialise_workflow:
     runs-on: ubuntu-24.04
-    steps:   
-      - name: checkout lower branch
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-          fetch-depth: 0
+    outputs:
+      iac_technology: ${{ steps.set_iac_technology.outputs.iac_technology }}
+      lower_environment: ${{ steps.set_environment_values.outputs.lower_environment }}
+      higher_environment: ${{ steps.set_environment_values.outputs.higher_environment }}
+      run_cd_checks: ${{ steps.step_register_to_run_ci_or_cd.outputs.run_cd_checks }}
+    steps:
+
+      - name: check to run ci or cd
+        id: step_register_to_run_ci_or_cd
+        run: |
+          echo "checking to run ci or cd"
+          if [ ${{ github.event.pull_request.merged }} == true ]; then
+            echo "This is a merged pull request, running CD checks"
+            echo "run_cd_checks=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "This is not a merged pull request, running CI checks"
+            echo "run_cd_checks=false" >> "${GITHUB_OUTPUT}"
+          fi
+          
+      - name: install yaml2json
+        run: |
+          set -ex
+          sudo apt install yaml2json
+
+      - name: show inputs
+        run: |
+          set -ex 
+          echo "Branch: ${{ inputs.branch }}"
+          echo "IAC Technology: ${{ inputs.iac_technology }}"
+          echo "Standard Branch: ${{ inputs.branch }}"
+          echo "Higher Branch: ${{ inputs.higher_branch }}"
+          echo "Environments: ${{ inputs.environments }}"
       
-      - name: Fetch base branch
-        run: git fetch origin ${{ env.higher_branch }}:${{ env.higher_branch }}
+      - name: set environment values
+        id: set_environment_values
+        run: |
+          input_json="$(echo "${{ inputs.environments}}" | yaml2json)"
+          echo "lower_environment=$(echo $input_json | jq -r --arg branch "${{ inputs.branch }}" '.[$branch]')" >> "${GITHUB_OUTPUT}"
+          echo "higher_environment=$(echo $input_json | jq -r --arg branch "${{ inputs.higher_branch }}" '.[$branch]')" >> "${GITHUB_OUTPUT}"
+
+      - name: set iac environment as lowercase
+        run: |
+          temp_iac_value="${{ inputs.iac_technology }}"
+          echo "iac_technology=${temp_iac_value@L}" >> "${GITHUB_ENV}"
+        #ignore linter for env.iac_technology, it is defined in the echo statement
+      - name: check iac technology is valid
+        run: |
+          iac_technology="${{ env.iac_technology }}"
+          if [[ "$iac_technology" == "terraform" || "$iac_technology" == "opentofu" ]]; then
+            echo "Utilising $iac_technology"
+          else
+            echo "::error ::Invalid IAC type provided, must be either terraform or opentofu"
+            exit 1
+          fi
       
-      - uses: 'google-github-actions/auth@v3'
-        with:
-          credentials_json: '${{ secrets.cloud_token }}'
+      - name: set output for iac technology
+        id: set_iac_technology
+        run: echo "iac_technology=${{ env.iac_technology }}" >> "$GITHUB_OUTPUT"
 
-      - name: Set up python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      
-      - name: set up terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.7.5"
+  ##### ci steps #####
+  call_terraform_quality_checks:
+    needs: initialise_workflow
+    if: needs.initialise_workflow.outputs.run_cd_checks == 'false'
+    uses: iac-pipeline/iac-pipeline/.github/workflows/terraform_quality_checks.yml@develop
+    with:
+      branch: ${{ inputs.branch }}
+      iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
+      higher_branch: ${{ inputs.higher_branch }}
+    secrets:
+      cloud_token: ${{ secrets.cloud_token }}
 
-      - name: Install Terragrunt and OpenTofu
-        uses: gruntwork-io/terragrunt-action@v3
-        with:
-          tg_version: '0.99.1'
-          tf_path: "terraform"
-          # {% if inputs.iac_tool == 'opentofu' %}
-          # tofu_version: "opentofu"
-          # {% endif %}
+  call-drift-detection:
+    needs: initialise_workflow
+    uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
+    with:
+      branch: ${{ inputs.branch }}
+      higher_branch: ${{ inputs.higher_branch }}
+      iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
+      lower_environment: ${{ needs.initialise_workflow.outputs.lower_environment }}
+      higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
+    secrets:
+      cloud_token: ${{ secrets.cloud_token }}
+  ##### end of ci steps #####
 
-      # - name: install terragrunt and open tofu
-      #   run: |
-      #     curl -L -o /usr/local/bin/terragrunt
+  ##### cd steps #####
+  call-apply:
+    needs: initialise_workflow
+    if: needs.initialise_workflow.outputs.run_cd_checks == 'true'
+    uses: iac-pipeline/iac-pipeline/.github/workflows/apply_iac.yml@develop
+    with:
+      production_branch: ${{ inputs.higher_branch }}
+      production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
+    secrets:
+      cloud_token: ${{ secrets.cloud_token }}
 
+    
 
-      - name: install checkov
-        run: pip install checkov
-
-          # please view:
-      # https://www.checkov.io/8.Outputs/SARIF.html
-      # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
-      # run all allows for terragrunt to check repo root
-      # - name: start plans for terragrunt
-      #   shell: bash
-      #   run: |
-      #     echo "$PWD"
-
-      #     echo "Starting Terraform code quality checks"
-
-      #     terragrunt run --all init
-
-      #     terragrunt run --all --filter-affected -- plan  -out=/tmp/tfplan
-
-      #     terragrunt run --all -- show -json /tmp/tfplan > /tmp/tfplan.json
-      
-      # - name: run checkov against plan results
-      #   id: quality-check
-      #   # do -sf  for a soft fail  https://www.checkov.io/2.Basics/Hard%20and%20soft%20fail.html
-      #   # soft fail provides a exit code of 0 on faliure
-      #   run: checkov -f /tmp/tfplan.json --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
-      #   continue-on-error: true
-      
-      # - name: Run Checkov action
-      #   id: checkov
-      #   uses: bridgecrewio/checkov-action@master
-      #   with:
-      #     file: tmp/tfplan.json
-      #     output_format: cli,sarif
-      #     output_file_path: console,/tmp/results_sarif.sarif
-      #   continue-on-error: true
-
-      - name: Run Checkov against Terraform code
-        run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
-        continue-on-error: true
-
-      - name: show sarif file
-      # results_sarif.sarif is the default sarif file name generated
-        run:  cat /tmp/results_sarif.sarif | jq .
-      
-      - name: Upload SARIF file
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: /tmp/results_sarif.sarif
+  ### end of cd steps #####
