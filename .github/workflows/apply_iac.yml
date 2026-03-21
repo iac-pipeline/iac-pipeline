@@ -57,7 +57,7 @@ jobs:
                 set -ex
                 commit_before_merge=$(git rev-parse HEAD^1)
                 echo "Commit before merge: $commit_before_merge"
-                modules_changes=$(terragrunt run --all find --filter "[${{ inputs.production_branch }} ... $commit_before_merge]" | grep /${{ inputs.production_environment }}/)
+                modules_changes=$(terragrunt find --filter "[${{ inputs.production_branch }} ... $commit_before_merge]" | grep /${{ inputs.production_environment }}/)
                 echo "Modules changed in this PR: $modules_changes"
 
                 if [[ -z "$modules_changes" ]]; then
