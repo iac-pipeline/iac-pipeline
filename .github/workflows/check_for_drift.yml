@@ -77,7 +77,7 @@ jobs:
               echo "Checking module: $module for drift"
               if [[ -d "$module" && -f "$module/terragrunt.hcl" ]]; then
 
-                  terragrunt run --json-out-dir /tmp/$environment/json plan --working-dir "$module" -out-dir /tmp/tfplan
+                  terragrunt run --all --json-out-dir /tmp/$environment/json plan --working-dir "$module" -out-dir /tmp/tfplan
 
                   grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' /tmp/$environment/json/tfplan.json)    
                   
