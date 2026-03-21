@@ -67,7 +67,7 @@ jobs:
 
                 for module in $modules_changes; do
                   if [[ -d "$module" ]] && [[ -f "$module/terragrunt.hcl" ]]; then
-                    terragrunt run --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --out-dir /tmp/${{ inputs.production_environment }}/tfplan --auto-approve
+                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --out-dir /tmp/${{ inputs.production_environment }}/tfplan --non-interactive -- -auto-approve
                     echo "command_status=$?" >> "${GITHUB_OUTPUT}"
                   fi
                 done
