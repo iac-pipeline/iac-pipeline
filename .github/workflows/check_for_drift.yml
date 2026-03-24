@@ -60,6 +60,10 @@ jobs:
           tg_version: '0.99.1'
           tf_path: ${{ inputs.iac_technology }}
       
+      - name: check for drift
+        uses: iac-pipeline/iac-pipeline/.github/actions/drift_detection@feature/composite_function
+
+
       - name: check state of environment
         run: |
           set -xe
