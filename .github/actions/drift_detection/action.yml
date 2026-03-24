@@ -1,0 +1,9 @@
+name: check for drift
+description: This action checks for drift
+runs:
+    using: "composite"
+    steps:
+        - name: check for drift
+          run: check-for-drift.sh
+          shell: bash
+        
