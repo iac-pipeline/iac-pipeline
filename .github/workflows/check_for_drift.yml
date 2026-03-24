@@ -61,7 +61,7 @@ jobs:
           tf_path: ${{ inputs.iac_technology }}
       
       - name: check for drift
-        uses: iac-pipeline/iac-pipeline/.github/actions/drift_detection@feature/composite_function
+        uses: iac-pipeline/iac-pipeline/.github/actions/drift_detection@develop
 
 
       - name: check state of environment

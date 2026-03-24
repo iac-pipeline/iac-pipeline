@@ -4,6 +4,6 @@ runs:
     using: "composite"
     steps:
         - name: check for drift
-          run: check-for-drift.sh
+          run: check_for_drift.sh
           shell: bash
         
