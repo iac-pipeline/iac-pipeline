@@ -38,6 +38,42 @@ for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment"
 done
 }
 
+check_drift_for_environments(){
+higher_environment="$1"
+lower_env_to_checkout="$2"
+higher_branch_to_check="$3"
+
+git checkout $lower_env_to_checkout
+
+echo "This is not a merged pull request"
+modules_changed=$(terragrunt find --filter "[$higher_branch_to_check ... $lower_env_to_checkout]" --format json | jq .)
+
+## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
+if check_module_status "$modules_changed" "$higher_environment"; then
+    echo "No changes detected in the lower environment. Skipping drift detection."
+    exit 0
+else
+    echo "Changes detected in the lower environment. Checking for drift in higher environment."
+
+    echo "Modules changed: $modules_changed"
+
+    git checkout $higher_branch_to_check
+
+    echo "Checking drift for modules: $modules_changed"
+
+    terragrunt run --all init
+
+    if check_module_status "$modules_changed" "$higher_environment"; then
+        echo "No drift detected on $higher_branch_to_check for environment: $higher_environment"
+        exit 0
+    else
+        echo "::error ::Drift detected on $higher_branch_to_check for environment: $higher_environment"
+        exit 1
+    fi
+fi
+
+}
+
 # locates the modules that has been changed in the lower environment
 # this is to check if there is any drift for the changed modules
 # has a condition to chec wether a marge has been done, as if so checking between branches will fail.
@@ -47,46 +83,8 @@ if [[ "$run_cd_checks" == "true" ]]; then
     echo "This is a merged pull request"
     commit_before_merge=$(git rev-parse HEAD^1)
     echo "Commit before merge: $commit_before_merge"
-    modules_changed=$(terragrunt find --filter "[$higher_branch ... $commit_before_merge]" --format json | jq .)
-
-    # The script needs to go checkout the commit from before the merge and do a plan
-    # if the checkout does not happen it wont detect wether a branch is new or not and will fail when it should pass
-    git checkout $commit_before_merge
-
-    if check_module_status "$modules_changed" "$testing_environment"; then
-        echo "No drift detected on $higher_branch for environment: $testing_environment"
-        exit 0
-    else
-        echo "::error ::Drift detected on $higher_branch for environment: $testing_environment"
-        exit 1
-    fi
+    check_drift_for_environments "$testing_environment" "$commit_before_merge" "$higher_branch"
 else
-    git checkout $branch
-
-    echo "This is not a merged pull request"
-    modules_changed=$(terragrunt find --filter "[$higher_branch ... $branch]" --format json | jq .)
-
-    ## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
-    if check_module_status "$modules_changed" "$testing_environment"; then
-        echo "No changes detected in the lower environment. Skipping drift detection."
-        exit 0
-    else
-        echo "Changes detected in the lower environment. Checking for drift in higher environment."
-
-        echo "Modules changed: $modules_changed"
-
-        git checkout $higher_branch
-
-        echo "Checking drift for modules: $modules_changed"
-
-        terragrunt run --all init
-
-        if check_module_status "$modules_changed" "$testing_environment"; then
-            echo "No drift detected on $higher_branch for environment: $testing_environment"
-            exit 0
-        else
-            echo "::error ::Drift detected on $higher_branch for environment: $testing_environment"
-            exit 1
-        fi
-    fi
+    echo "This is not a merged pull request, checking for drift between branches"
+    check_drift_for_environments "$testing_environment" "$branch" "$higher_branch"
 fi
