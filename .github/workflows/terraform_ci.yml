@@ -119,12 +119,13 @@ jobs:
 
   ##### cd steps #####
   call-apply:
-    needs: initialise_workflow
-    if: needs.initialise_workflow.outputs.run_cd_checks == 'true'
+    needs: [initialise_workflow, call-drift-detection]
+    if: needs.initialise_workflow.outputs.run_cd_checks == 'true' 
     uses: iac-pipeline/iac-pipeline/.github/workflows/apply_iac.yml@develop
     with:
       production_branch: ${{ inputs.higher_branch }}
       production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
+      iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
 
