@@ -1,6 +1,8 @@
 set -xe
 # change this value to fit for the higher environment, e.g. prod, staging, dev
 
+tf_plan_file_route="/tmp/$testing_environment/plan/"
+tpf_plan_json_route="/tmp/$testing_environment/json/"
 
 
 echo "Checking for drift on $higher_branch for environment: $environment"
@@ -8,11 +10,13 @@ echo "Checking for drift on $higher_branch for environment: $environment"
 check_module_status() {
 local changes_modules_to_check="$1"
 local environment="$2"
+terragrunt run --all init
 for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
     echo "Checking module: $module for drift"
     if [[ -d "$module" && -f "$module/terragrunt.hcl" ]]; then
 
-        terragrunt run --all --json-out-dir /tmp/$environment/json plan --working-dir "$module" -out-dir /tmp/tfplan
+        terragrunt run plan --working-dir "$module" -- -out="$tf_plan_file_route/tfplan.binary"
+        terragrunt show -json $tf_plan_file_route/tfplan.binary --working-dir "$module" > $tpf_plan_json_route/tfplan.json
 
         grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' /tmp/$environment/json/tfplan.json)    
         
@@ -38,6 +42,11 @@ for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment"
 done
 }
 
+
+## note for this function
+## if there is drift detected  on the previous commit terraform trigger analysis on latest commmit
+## if there is drift detection on the latest commit and previous it means that the code coming in the latest commit will not resolve the drift
+## as such fail to prevent potential damage..
 check_drift_for_environments(){
 higher_environment="$1"
 lower_env_to_checkout="$2"
@@ -50,18 +59,17 @@ modules_changed=$(terragrunt find --filter "[$higher_branch_to_check ... $lower_
 
 ## check if modules are changing in the lower environment, if not then we can skip the drift detection as there is no change to the infrastructure
 if check_module_status "$modules_changed" "$higher_environment"; then
-    echo "No changes detected in the lower environment. Skipping drift detection."
+    echo "No changes detected on PR base $lower_env_to_checkout, Skipping drift detection."
     exit 0
 else
-    echo "Changes detected in the lower environment. Checking for drift in higher environment."
-
-    echo "Modules changed: $modules_changed"
+    echo "Changes detected on PR base $lower_env_to_checkout. Checking for drift in higher environment."
 
     git checkout $higher_branch_to_check
 
     echo "Checking drift for modules: $modules_changed"
 
-    terragrunt run --all init
+    rm $tpf_plan_json_route/*
+    rm $tf_plan_file_route/*
 
     if check_module_status "$modules_changed" "$higher_environment"; then
         echo "No drift detected on $higher_branch_to_check for environment: $higher_environment"
@@ -79,6 +87,8 @@ fi
 # has a condition to chec wether a marge has been done, as if so checking between branches will fail.
 modules_changed=""
 echo "Run CD checks: $run_cd_checks"
+mkdir -p $tf_plan_file_route
+mkdir -p $tpf_plan_json_route
 if [[ "$run_cd_checks" == "true" ]]; then
     echo "This is a merged pull request"
     commit_before_merge=$(git rev-parse HEAD^1)

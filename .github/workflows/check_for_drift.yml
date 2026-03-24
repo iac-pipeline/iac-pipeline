@@ -64,6 +64,7 @@ jobs:
           tf_path: ${{ inputs.iac_technology }}
       
       - name: check for drift
+        id: check_state_of_environment
         uses: iac-pipeline/iac-pipeline/.github/actions/drift_detection@develop
         with:
           branch: ${{ inputs.branch }}
