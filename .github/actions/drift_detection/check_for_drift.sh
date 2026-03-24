@@ -18,10 +18,10 @@ for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment"
         terragrunt run plan --working-dir "$module" -- -out="$tf_plan_file_route/tfplan.binary"
         terragrunt show -json $tf_plan_file_route/tfplan.binary --working-dir "$module" > $tpf_plan_json_route/tfplan.json
 
-        grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' /tmp/$environment/json/tfplan.json)    
+        grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' $tpf_plan_json_route/tfplan.json)    
         
         # get all the actions from the tfplan json and loop through them, if any of them are not no-op then we have drift
-        actions=$( jq -r '.resource_changes[].change.actions' /tmp/$environment/json/tfplan.json) 
+        actions=$( jq -r '.resource_changes[].change.actions' $tpf_plan_json_route/tfplan.json) 
         echo $actions
         for action in $( echo $actions | jq -r '.[]'); do
             if [[ "$action" == "no-op" ]]; then
