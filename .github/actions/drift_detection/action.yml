@@ -1,9 +1,28 @@
 name: check for drift
 description: This action checks for drift
+inputs:
+    branch:
+        description: 'The branch to check for drift on'
+        required: true
+    higher_branch:
+        description: 'The branch to compare against, e.g. main or develop'
+        required: false
+    higher_environment:
+        description: 'The environment of the higher branch, e.g. prod or staging'
+        required: true
+    run_cd_checks:
+        description: 'Whether to run cd checks, true or false'
+        required: true
 runs:
     using: "composite"
     steps:
         - name: check for drift
           run: ${{ github.action_path }}/check_for_drift.sh
           shell: bash
+          env:
+            branch: ${{ inputs.branch }}
+            higher_branch: ${{ inputs.higher_branch }}
+            testing_environment: ${{ inputs.higher_environment }}
+            run_cd_checks: ${{ inputs.run_cd_checks }}
+            
         

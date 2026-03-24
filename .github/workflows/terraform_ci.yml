@@ -113,6 +113,7 @@ jobs:
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
       lower_environment: ${{ needs.initialise_workflow.outputs.lower_environment }}
       higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
+      run_cd_checks: ${{ needs.initialise_workflow.outputs.run_cd_checks }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}
   ##### end of ci steps #####
