@@ -63,6 +63,7 @@ runs:
             ### Drift must be resolved before this PR can be merged. ###
             ### Plan output: for ${{ steps.check_state_of_environment.outputs.module_with_drift }} ###
             cat ${{ steps.check_state_of_environment.outputs.plan_output_file }}
+            EOF
             )
             echo "comment_body=$comment_body" >> "${GITHUB_OUTPUT}"
           shell: bash
