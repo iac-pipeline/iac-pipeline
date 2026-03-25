@@ -72,9 +72,13 @@ jobs:
           higher_environment: ${{ inputs.higher_environment }}
           run_cd_checks: ${{ inputs.run_cd_checks }}
       
-      - name: set output for drifted module
+      - name: send comment to user on PR
         if: steps.check_state_of_environment.outcome == 'failure'
-        run: | 
-          echo "drifted_module=${{ steps.check_state_of_environment.outputs.module_with_drift }}"
-          ls /tmp/tfplan/
+        uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+        with:
+          custom_body: ${{ steps.create_failure_comment.outputs.comment_body }}
+      
+      - name: end script with failure exit code
+        if: steps.check_state_of_environment.outcome == 'failure'
+        run: exit 1
 
