@@ -16,6 +16,12 @@ inputs:
 runs:
     using: "composite"
     steps:
+        - name: set file path
+          shell: bash
+          run: |
+            echo "json_file_route=/tmp/${{ inputs.higher_environment }}/json/" >> "${GITHUB_ENV}"
+            echo "tf_plan_file_route=/tmp/${{ inputs.higher_environment }}/plan/" >> "${GITHUB_ENV}"
+
         - name: check for drift
           run: ${{ github.action_path }}/check_for_drift.sh
           shell: bash
@@ -24,5 +30,15 @@ runs:
             higher_branch: ${{ inputs.higher_branch }}
             testing_environment: ${{ inputs.higher_environment }}
             run_cd_checks: ${{ inputs.run_cd_checks }}
+            tf_plan_json_route: ${{ env.json_file_route }}
+            tf_plan_file_route: ${{ env.tf_plan_file_route }}
+            continue-on-error: true
+        
+        - name: set output for module with drift
+          if: steps.check_for_drift.outputs.module_with_drift
+          run: | 
+            echo ${{ steps.check_for_drift.outputs.module_with_drift }}
+            ls ${{ env.tf_plan_file_route }}/
+          shell: bash
             
         

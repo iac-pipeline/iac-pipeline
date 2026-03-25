@@ -1,27 +1,24 @@
 set -xe
 # change this value to fit for the higher environment, e.g. prod, staging, dev
 
-tf_plan_file_route="/tmp/$testing_environment/plan/"
-tpf_plan_json_route="/tmp/$testing_environment/json/"
-
-
 echo "Checking for drift on $higher_branch for environment: $environment"
 
 check_module_status() {
 local changes_modules_to_check="$1"
 local environment="$2"
+local failure=false
 terragrunt run --all init
 for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
     echo "Checking module: $module for drift"
-    if [[ -d "$module" && -f "$module/terragrunt.hcl" ]]; then
+    if [[ -d "$module" && -f "$module/*.hcl" ]]; then
 
         terragrunt run plan --working-dir "$module" -- -out="$tf_plan_file_route/tfplan.binary"
-        terragrunt show -json $tf_plan_file_route/tfplan.binary --working-dir "$module" > $tpf_plan_json_route/tfplan.json
+        terragrunt show -json $tf_plan_file_route/tfplan.binary > $tf_plan_json_route/tfplan.json
 
-        grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' $tpf_plan_json_route/tfplan.json)    
+        grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' $tf_plan_json_route/tfplan.json)    
         
         # get all the actions from the tfplan json and loop through them, if any of them are not no-op then we have drift
-        actions=$( jq -r '.resource_changes[].change.actions' $tpf_plan_json_route/tfplan.json) 
+        actions=$( jq -r '.resource_changes[].change.actions' $tf_plan_json_route/tfplan.json) 
         echo $actions
         for action in $( echo $actions | jq -r '.[]'); do
             if [[ "$action" == "no-op" ]]; then
@@ -68,7 +65,7 @@ else
 
     echo "Checking drift for modules: $modules_changed"
 
-    rm $tpf_plan_json_route/*
+    rm $tf_plan_json_route/*
     rm $tf_plan_file_route/*
 
     if check_module_status "$modules_changed" "$higher_environment"; then
@@ -88,7 +85,7 @@ fi
 modules_changed=""
 echo "Run CD checks: $run_cd_checks"
 mkdir -p $tf_plan_file_route
-mkdir -p $tpf_plan_json_route
+mkdir -p $tf_plan_json_route
 if [[ "$run_cd_checks" == "true" ]]; then
     echo "This is a merged pull request"
     commit_before_merge=$(git rev-parse HEAD^1)
