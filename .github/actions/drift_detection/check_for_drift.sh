@@ -1,6 +1,9 @@
 set -xe
 # change this value to fit for the higher environment, e.g. prod, staging, dev
 
+tf_plan_file_route="/tmp/$testing_environment/plan/"
+tf_plan_json_route="/tmp/$testing_environment/json/"
+
 echo "Checking for drift on $higher_branch for environment: $environment"
 
 check_module_status() {
@@ -13,7 +16,7 @@ for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment"
     if [[ -d "$module" && $(compgen -G "$module/*.hcl") ]]; then
 
         terragrunt run plan --working-dir "$module" -- -out="$tf_plan_file_route/tfplan.binary"
-        terragrunt show -json $tf_plan_file_route/tfplan.binary > $tf_plan_json_route/tfplan.json
+        terragrunt show --working-dir "$module" -json $tf_plan_file_route/tfplan.binary > $tf_plan_json_route/tfplan.json
 
         grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' $tf_plan_json_route/tfplan.json)    
         
