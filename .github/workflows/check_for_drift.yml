@@ -73,13 +73,13 @@ jobs:
           run_cd_checks: ${{ inputs.run_cd_checks }}
       
       - name: send comment to user on PR
-        if: steps.check_state_of_environment.outcome == 'failure'
+        if: steps.check_state_of_environment.outputs.check_for_drift_outcome == 'failure'
         uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
         with:
           custom_plan_location: ${{ steps.output_drift_details.outputs.plan_output_file }}
           custom_body_message: "Drift detected in module ${{ steps.check_state_of_environment.outputs.module_with_drift }}"
       
       - name: end script with failure exit code
-        if: steps.check_state_of_environment.outcome == 'failure'
+        if: steps.check_state_of_environment.outputs.check_for_drift_outcome == 'failure'
         run: exit 1
 
