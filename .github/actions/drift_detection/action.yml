@@ -13,6 +13,13 @@ inputs:
     run_cd_checks:
         description: 'Whether to run cd checks, true or false'
         required: true
+outputs:
+    output_comment_body:
+        description: 'The body of the comment to be posted on the PR'
+        value: ${{ steps.create_failure_comment.outputs.comment_body }}
+    check_for_drift_outcome:
+        description: 'The outcome of the check for drift step, success or failure'
+        value: ${{ steps.check_state_of_environment.outcome }}
 runs:
     using: "composite"
     steps:
@@ -41,6 +48,22 @@ runs:
             echo ${{ steps.check_state_of_environment.outputs.module_with_drift }}
             ls ${{ env.tf_plan_file_route }}
             cat ${{ env.tf_plan_file_route }}/tfplan.binary
+
+            plan_output_file="/tmp/check_drift_plan_output.txt"
+            echo "plan_output_file=$plan_output_file" >> "${GITHUB_OUTPUT}"
+
+            terragrunt show ${{ env.tf_plan_file_route }}/tfplan.binary --working-dir ${{ steps.check_state_of_environment.outputs.module_with_drift }} --no-color 2>&1 | tee $plan_output_file
           shell: bash
-            
+
+        - name: create failure comment
+          if: steps.check_state_of_environment.outcome == 'failure'
+          run: |
+            comment_body=$(cat << EOF 
+            ### Drift detected in module ${{ steps.check_state_of_environment.outputs.module_with_drift }} ###
+            ### Drift must be resolved before this PR can be merged. ###
+            ### Plan output: for ${{ steps.check_state_of_environment.outputs.module_with_drift }} ###
+            cat ${{ steps.check_state_of_environment.outputs.plan_output_file }}
+            )
+            echo "comment_body=$comment_body" >> "${GITHUB_OUTPUT}"
+          shell: bash
         

@@ -1,0 +1,17 @@
+name: write comment
+description: 'Writes a comment on the pull request'
+inputs:
+  custom_body:
+    description: 'The message to be input into the body'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: write comment
+      run: ${{ github.action_path }}/write_comment.sh
+      shell: bash
+      env:
+        client_repository: ${{ github.repository }}
+        client_pull_request_number: ${{ github.event.pull_request.number }}
+        body_to_post: ${{ inputs.custom_body }}
