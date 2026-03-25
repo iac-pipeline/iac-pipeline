@@ -1,3 +1,9 @@
+body_to_post=$(cat << EOF
+### $body_message_to_post ###
+$(cat "$custom_plan_location")
+EOF
+)
+
 set -e
 echo $body_to_post
 curl -L -X POST \

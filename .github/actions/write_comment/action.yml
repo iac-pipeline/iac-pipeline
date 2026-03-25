@@ -1,7 +1,10 @@
 name: write comment
 description: 'Writes a comment on the pull request'
 inputs:
-  custom_body:
+  custom_plan_location:
+    description: 'The location of the plan output file'
+    required: true
+  custom_body_message:
     description: 'The message to be input into the body'
     required: true
 
@@ -14,4 +17,5 @@ runs:
       env:
         client_repository: ${{ github.repository }}
         client_pull_request_number: ${{ github.event.pull_request.number }}
-        body_to_post: ${{ inputs.custom_body }}
+        custom_plan_location: ${{ inputs.custom_plan_location }}
+        body_message_to_post: ${{ inputs.custom_body_message }}

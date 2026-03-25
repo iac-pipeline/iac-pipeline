@@ -76,7 +76,8 @@ jobs:
         if: steps.check_state_of_environment.outcome == 'failure'
         uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
         with:
-          custom_body: ${{ steps.create_failure_comment.outputs.comment_body }}
+          custom_plan_location: ${{ steps.output_drift_details.outputs.plan_output_file }}
+          custom_body_message: "Drift detected in module ${{ steps.check_state_of_environment.outputs.module_with_drift }}"
       
       - name: end script with failure exit code
         if: steps.check_state_of_environment.outcome == 'failure'
