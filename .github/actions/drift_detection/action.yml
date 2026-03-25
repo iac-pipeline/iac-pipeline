@@ -19,7 +19,7 @@ outputs:
         value: ${{ steps.output_drift_details.outputs.plan_output_file }}
     check_for_drift_outcome:
         description: 'The outcome of the check for drift step, success or failure'
-        value: ${{ steps.check_state_of_environment.outcome }}
+        value: ${{ steps.check_state_of_environment_step.outcome }}
 runs:
     using: "composite"
     steps:
@@ -30,7 +30,7 @@ runs:
             echo "tf_plan_file_route=/tmp/${{ inputs.higher_environment }}/plan" >> "${GITHUB_ENV}"
 
         - name: check for drift
-          id: check_state_of_environment
+          id: check_state_of_environment_step
           run: ${{ github.action_path }}/check_for_drift.sh
           shell: bash
           env:
@@ -44,15 +44,15 @@ runs:
         
         - name: set output for module with drift
           id: output_drift_details
-          if: steps.check_state_of_environment.outcome == 'failure'
+          if: steps.check_state_of_environment_step.outcome == 'failure'
           run: | 
-            echo ${{ steps.check_state_of_environment.outputs.module_with_drift }}
+            echo ${{ steps.check_state_of_environment_step.outputs.module_with_drift }}
             ls ${{ env.tf_plan_file_route }}
             cat ${{ env.tf_plan_file_route }}/tfplan.binary
 
             plan_output_file="/tmp/check_drift_plan_output.txt"
             echo "plan_output_file=$plan_output_file" >> "${GITHUB_OUTPUT}"
 
-            terragrunt show ${{ env.tf_plan_file_route }}/tfplan.binary --working-dir ${{ steps.check_state_of_environment.outputs.module_with_drift }} --no-color 2>&1 | tee $plan_output_file
+            terragrunt show ${{ env.tf_plan_file_route }}/tfplan.binary --working-dir ${{ steps.check_state_of_environment_step.outputs.module_with_drift }} --no-color 2>&1 | tee $plan_output_file
           shell: bash
         
