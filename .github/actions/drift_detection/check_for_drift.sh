@@ -1,8 +1,6 @@
 set -xe
 # change this value to fit for the higher environment, e.g. prod, staging, dev
 
-tf_plan_file_route="/tmp/$testing_environment/plan/"
-tf_plan_json_route="/tmp/$testing_environment/json/"
 
 echo "Checking for drift on $higher_branch for environment: $environment"
 

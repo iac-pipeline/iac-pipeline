@@ -19,8 +19,8 @@ runs:
         - name: set file path
           shell: bash
           run: |
-            echo "json_file_route=/tmp/${{ inputs.higher_environment }}/json/" >> "${GITHUB_ENV}"
-            echo "tf_plan_file_route=/tmp/${{ inputs.higher_environment }}/plan/" >> "${GITHUB_ENV}"
+            echo "json_file_route=/tmp/${{ inputs.higher_environment }}/json" >> "${GITHUB_ENV}"
+            echo "tf_plan_file_route=/tmp/${{ inputs.higher_environment }}/plan" >> "${GITHUB_ENV}"
 
         - name: check for drift
           id: check_state_of_environment
@@ -33,13 +33,14 @@ runs:
             run_cd_checks: ${{ inputs.run_cd_checks }}
             tf_plan_json_route: ${{ env.json_file_route }}
             tf_plan_file_route: ${{ env.tf_plan_file_route }}
-            continue-on-error: true
+          continue-on-error: true
         
         - name: set output for module with drift
           if: steps.check_state_of_environment.outcome == 'failure'
           run: | 
             echo ${{ steps.check_state_of_environment.outputs.module_with_drift }}
-            ls ${{ env.tf_plan_file_route }}/
+            ls ${{ env.tf_plan_file_route }}
+            cat ${{ env.tf_plan_file_route }}/tfplan.binary
           shell: bash
             
         
