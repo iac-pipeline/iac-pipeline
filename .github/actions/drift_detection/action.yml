@@ -38,7 +38,7 @@ runs:
         - name: set output for module with drift
           if: steps.check_state_of_environment.outcome == 'failure'
           run: | 
-            echo ${{ steps.check_for_drift.outputs.module_with_drift }}
+            echo ${{ steps.check_state_of_environment.outputs.module_with_drift }}
             ls ${{ env.tf_plan_file_route }}/
           shell: bash
             
