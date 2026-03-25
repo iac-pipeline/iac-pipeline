@@ -10,7 +10,7 @@ local failure=false
 terragrunt run --all init
 for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment" ); do
     echo "Checking module: $module for drift"
-    if [[ -d "$module" && -f "$module/*.hcl" ]]; then
+    if [[ -d "$module" && $(compgen -G "$module/*.hcl") ]]; then
 
         terragrunt run plan --working-dir "$module" -- -out="$tf_plan_file_route/tfplan.binary"
         terragrunt show -json $tf_plan_file_route/tfplan.binary > $tf_plan_json_route/tfplan.json
