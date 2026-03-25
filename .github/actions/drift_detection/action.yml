@@ -23,6 +23,7 @@ runs:
             echo "tf_plan_file_route=/tmp/${{ inputs.higher_environment }}/plan/" >> "${GITHUB_ENV}"
 
         - name: check for drift
+          id: check_state_of_environment
           run: ${{ github.action_path }}/check_for_drift.sh
           shell: bash
           env:
@@ -35,7 +36,7 @@ runs:
             continue-on-error: true
         
         - name: set output for module with drift
-          if: steps.check_for_drift.outputs.module_with_drift
+          if: steps.check_state_of_environment.outcome == 'failure'
           run: | 
             echo ${{ steps.check_for_drift.outputs.module_with_drift }}
             ls ${{ env.tf_plan_file_route }}/
