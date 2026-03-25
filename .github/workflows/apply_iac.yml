@@ -88,6 +88,14 @@ jobs:
                   cat $file >> /tmp/final_apply/apply_output.txt
                 done
               
+            - name: send feedback on apply status
+              if: steps.apply_iac.outputs.command_status != '0'
+              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+              with:
+                custom_body_message: "Apply failed for module ${{ steps.apply_iac.outputs.failed_module }} with exit code ${{ steps.apply_iac.outputs.command_status }}. Please check the apply output for more details."
+                custom_plan_location: "/tmp/final_apply/apply_output.txt"
+
+
             - name: check apply status
               run: |
                 if [[ "${{ steps.apply_iac.outputs.command_status }}" == "0" ]]; then
@@ -98,7 +106,6 @@ jobs:
                     cat $file
                   done
                   echo "::error ::Apply failed for one or more modules with exit code ${{ steps.apply_iac.outputs.command_status}} for module ${{ steps.apply_iac.outputs.failed_module }}"
-                  exit 1
                 fi
             
 
