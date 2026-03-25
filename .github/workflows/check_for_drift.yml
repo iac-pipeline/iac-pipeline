@@ -30,6 +30,7 @@ on:
 # env:
 #   higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
 permissions:
+  pull-requests: write
   contents: read 
   security-events: write 
   actions: read 

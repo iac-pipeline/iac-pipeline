@@ -20,6 +20,9 @@ outputs:
     check_for_drift_outcome:
         description: 'The outcome of the check for drift step, success or failure'
         value: ${{ steps.check_state_of_environment_step.outcome }}
+    module_with_drift:
+        description: 'The module which has drift'
+        value: ${{ steps.check_state_of_environment_step.outputs.module_with_drift }}
 runs:
     using: "composite"
     steps:
