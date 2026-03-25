@@ -129,8 +129,6 @@ jobs:
       production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
     secrets:
-      cloud_token: ${{ secrets.cloud_token }}
-
-    
-
+      cloud_token: ${{ secrets.cloud_token }}  
+  
   ### end of cd steps #####

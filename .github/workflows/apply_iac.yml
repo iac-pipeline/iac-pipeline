@@ -55,6 +55,8 @@ jobs:
               id: apply_iac
               run: |
                 set -ex
+                echo "file_path_apply_output=/tmp/${{ inputs.production_environment }}/apply_output" >> "${GITHUB_output}"
+                mkdir -p $file_path_apply_output
                 commit_before_merge=$(git rev-parse HEAD^1)
                 echo "Commit before merge: $commit_before_merge"
                 modules_changes=$(terragrunt find --filter "[${{ inputs.production_branch }} ... $commit_before_merge]" | grep /${{ inputs.production_environment }}/)
@@ -67,23 +69,36 @@ jobs:
 
                 for module in $modules_changes; do
                   if [[ -d "$module" ]] && [[ -f "$module/terragrunt.hcl" ]]; then
-                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --out-dir /tmp/${{ inputs.production_environment }}/tfplan --non-interactive -- -auto-approve
+                    text_file_name=$(echo $module | tr '/' '_')
+                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module"--non-interactive -- -auto-approve 2>&1 | tee $file_path_apply_output/$text_file_name.txt
                     echo "command_status=$?" >> "${GITHUB_OUTPUT}"
+                    if [[ $command_status -ne 0 ]]; then
+                      echo "::error ::Apply failed for module $module with exit code $command_status"
+                      echo "failed_module=$module" >> "${GITHUB_OUTPUT}"
+                    fi
                   fi
                 done
                 echo "Modules changed: $modules_changes"
               continue-on-error: true
+
+            - name: merge apply output files
+              run: |
+                find_all_apply_files=$(find ${{ steps.apply_iac.outputs.file_path_apply_output }}/*.txt)
+                for file in $find_all_apply_files; do
+                  cat $file >> /tmp/final_apply/apply_output.txt
+                done
               
             - name: check apply status
               run: |
                 if [[ "${{ steps.apply_iac.outputs.command_status }}" == "0" ]]; then
                   echo "Apply successful for all modules"
                 else
-                  # next step get flaiure details from the json output and print them in the logs, this will help with debugging and understanding why the apply failed without having to go to the cloud provider console
+                  # next step get failure details from the json output and print them in the logs, this will help with debugging and understanding why the apply failed without having to go to the cloud provider console
                   for file in /tmp/${{ inputs.production_environment }}/json/*.json; do
                     cat $file
                   done
-                  echo "::error ::Apply failed for one or more modules with exit code ${{ steps.apply_iac.outputs.command_status}}"
+                  echo "::error ::Apply failed for one or more modules with exit code ${{ steps.apply_iac.outputs.command_status}} for module ${{ steps.apply_iac.outputs.failed_module }}"
                   exit 1
                 fi
+            
 
