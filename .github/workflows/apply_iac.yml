@@ -65,6 +65,7 @@ jobs:
 
                 if [[ -z "$modules_changes" ]]; then
                   echo "No modules changed in this PR, skipping apply"
+                  echo "command_status=$?" >> "${GITHUB_OUTPUT}"
                   exit 0
                 fi
                 echo "Modules changed in this PR: $modules_changes"
@@ -98,11 +99,18 @@ jobs:
                   cat $file >> /tmp/final_apply/apply_output.txt
                 done
               
-            - name: send feedback on apply status
+            - name: send feedback on failing apply
               if: steps.apply_iac.outputs.command_status != '0'
               uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
               with:
                 custom_body_message: "Apply failed for module ${{ steps.apply_iac.outputs.failed_module }} with exit code ${{ steps.apply_iac.outputs.command_status }}. Please check the apply output for more details."
+                custom_plan_location: "/tmp/final_apply/apply_output.txt"
+            
+            - name: send feedback on apply
+              if: steps.apply_iac.outputs.command_status == '0'
+              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+              with:
+                custom_body_message: "No errors found during apply"
                 custom_plan_location: "/tmp/final_apply/apply_output.txt"
 
 
