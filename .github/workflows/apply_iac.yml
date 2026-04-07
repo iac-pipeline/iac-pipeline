@@ -54,18 +54,20 @@ jobs:
             - name: apply iac
               id: apply_iac
               run: |
-                set -ex
-                echo "file_path_apply_output=/tmp/${{ inputs.production_environment }}/apply_output" >> "${GITHUB_output}"
+                set -x
+                file_path_apply_output="/tmp/${{ inputs.production_environment }}/apply_output"
+                echo "file_path_apply_output=$file_path_apply_output" >> "${GITHUB_OUTPUT}"
                 mkdir -p $file_path_apply_output
+
                 commit_before_merge=$(git rev-parse HEAD^1)
                 echo "Commit before merge: $commit_before_merge"
-                modules_changes=$(terragrunt find --filter "[${{ inputs.production_branch }} ... $commit_before_merge]" | grep /${{ inputs.production_environment }}/)
-                echo "Modules changed in this PR: $modules_changes"
+                modules_changes=$(terragrunt find --filter "[${{ inputs.production_branch }} ... $commit_before_merge]" | grep /${{ inputs.production_environment }}/ || true)
 
                 if [[ -z "$modules_changes" ]]; then
                   echo "No modules changed in this PR, skipping apply"
                   exit 0
                 fi
+                echo "Modules changed in this PR: $modules_changes"
 
                 for module in $modules_changes; do
                   if [[ -d "$module" ]] && [[ -f "$module/terragrunt.hcl" ]]; then
