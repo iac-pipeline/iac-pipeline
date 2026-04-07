@@ -85,6 +85,8 @@ jobs:
 
             - name: merge apply output files
               run: |
+                set +e
+                mkdir -p /tmp/final_apply/
                 find_all_apply_files=$(find ${{ steps.apply_iac.outputs.file_path_apply_output }}/*.txt || true)
                 if [[ -z "$find_all_apply_files" ]]; then
                   echo "No apply output files found, skipping merge"
