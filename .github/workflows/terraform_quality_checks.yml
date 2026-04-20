@@ -6,18 +6,26 @@ on:
       branch:
         required: true
         type: string
-      # iac_tool:
-      #   required: true
-      #   type: string
       iac_technology:
         required: true
         type: string
       higher_branch:
         required: true
         type: string
+      cloud_provider:
+        required: true
+        type: string
+
     secrets:
       cloud_token:
-        required: true
+        required: false
+      aws_region:
+        required: false
+      aws_account_id:
+        required: false
+      aws_role_to_assume:
+        required: false
+
 permissions:
   contents: read 
   security-events: write 
@@ -34,32 +42,23 @@ jobs:
           ref: ${{ inputs.branch }}
           fetch-depth: 0
       
-      - name: Fetch base branch
-        run: git fetch origin ${{ inputs.higher_branch }}:${{ inputs.higher_branch }}
+      - name: run basic setup
+        uses: iac-pipeline/iac-pipeline/.github/workflows/basic_setup@develop
+        with:
+          iac_technology: ${{ inputs.iac_technology }}
+          cloud_token_secret_name: ${{ secrets.cloud_token }}
+          cloud_provider: '${{ inputs.cloud_provider }}'
+        if: ${{ inputs.cloud_provider == 'GCP'|| inputs.cloud_provider == 'Azure' }}
       
-      - uses: 'google-github-actions/auth@v3'
+      - name: run basic setup
+        uses: iac-pipeline/iac-pipeline/.github/workflows/basic_setup@develop
         with:
-          credentials_json: '${{ secrets.cloud_token }}'
-
-      - name: Set up python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      
-      - name: set up terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.7.5"
-
-      - name: Install Terragrunt and OpenTofu
-        uses: gruntwork-io/terragrunt-action@v3
-        with:
-          tg_version: '0.99.1'
-          tf_path: ${{ inputs.iac_technology }}
-      # - name: install terragrunt and open tofu
-      #   run: |
-      #     curl -L -o /usr/local/bin/terragrunt
-
+          iac_technology: ${{ inputs.iac_technology }}
+          cloud_provider: '${{ inputs.cloud_provider }}'
+          aws_region: ${{ secrets.aws_region }}
+          aws_account_id: ${{ secrets.aws_account_id }}
+          aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
+        if: ${{ inputs.cloud_provider == 'AWS' }}
 
       - name: install checkov
         run: pip install checkov

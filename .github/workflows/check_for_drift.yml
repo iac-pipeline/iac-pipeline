@@ -27,6 +27,7 @@ on:
     secrets:
       cloud_token:
         required: true
+      
 # env:
 #   higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
 permissions:
