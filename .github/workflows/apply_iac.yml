@@ -12,9 +12,18 @@ on:
         iac_technology:
             required: true
             type: string
+        cloud_provider:
+            required: true
+            type: string
     secrets:
         cloud_token:
             required: true
+        aws_region:
+            required: false
+        aws_account_id:
+            required: false
+        aws_role_to_assume:
+            required: false
 
 permissions:
   pull-requests: write
@@ -32,25 +41,15 @@ jobs:
                 ref: ${{ inputs.production_branch }}
                 fetch-depth: 0
 
-            - uses: 'google-github-actions/auth@v3'
+            - name: authenticate to cloud provider
+              uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
               with:
-                credentials_json: '${{ secrets.cloud_token }}'
-
-            - name: Set up python 3.9
-              uses: actions/setup-python@v4
-              with:
-                python-version: 3.9
-            
-            - name: set up terraform
-              uses: hashicorp/setup-terraform@v3
-              with:
-                terraform_version: "1.7.5"
-
-            - name: Install Terragrunt and OpenTofu
-              uses: gruntwork-io/terragrunt-action@v3
-              with:
-                tg_version: '0.99.1'
-                tf_path: ${{ inputs.iac_technology }}
+                cloud_provider: ${{ inputs.cloud_provider }}
+                iac_technology: ${{ inputs.iac_technology }}
+                cloud_token_secret_name: ${{ secrets.cloud_token }}
+                aws_region: ${{ secrets.aws_region }}
+                aws_account_id: ${{ secrets.aws_account_id }}
+                aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
             
             - name: apply iac
               id: apply_iac
@@ -74,7 +73,7 @@ jobs:
                 for module in $modules_changes; do
                   if [[ -d "$module" ]] && [[ -f "$module/terragrunt.hcl" ]]; then
                     text_file_name=$(echo $module | tr '/' '_')
-                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module"--non-interactive -- -auto-approve 2>&1 | tee $file_path_apply_output/$text_file_name.txt
+                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --non-interactive -- -auto-approve 2>&1 | tee $file_path_apply_output/$text_file_name.txt
                     echo "command_status=$?" >> "${GITHUB_OUTPUT}"
                     if [[ $command_status -ne 0 ]]; then
                       echo "::error ::Apply failed for module $module with exit code $command_status"

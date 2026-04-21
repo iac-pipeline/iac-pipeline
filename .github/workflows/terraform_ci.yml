@@ -147,7 +147,11 @@ jobs:
       production_branch: ${{ inputs.higher_branch }}
       production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
+      cloud_provider: ${{ inputs.cloud_provider }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}  
+      aws_region: ${{ secrets.aws_region || '' }}
+      aws_account_id: ${{ secrets.aws_account_id || '' }}
+      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
   
   ### end of cd steps #####
