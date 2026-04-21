@@ -20,9 +20,18 @@ on:
       environments:
         required: true
         type: string
+      cloud_provider:
+        required: true
+        type: string
     secrets:
       cloud_token:
-        required: true
+        required: false
+      aws_region:
+        required: false
+      aws_account_id:
+        required: false
+      aws_role_to_assume:
+        required: false
 
 permissions:
   pull-requests: write
@@ -102,8 +111,13 @@ jobs:
       branch: ${{ inputs.branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
       higher_branch: ${{ inputs.higher_branch }}
+      cloud_provider: ${{ inputs.cloud_provider }}
     secrets:
-      cloud_token: ${{ secrets.cloud_token }}
+      cloud_token: ${{ secrets.cloud_token || '' }}
+      aws_region: ${{ secrets.aws_region || '' }}
+      aws_account_id: ${{ secrets.aws_account_id || '' }}
+      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+
 
   call-drift-detection:
     needs: initialise_workflow
@@ -116,7 +130,8 @@ jobs:
       higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       run_cd_checks: ${{ needs.initialise_workflow.outputs.run_cd_checks }}
     secrets:
-      cloud_token: ${{ secrets.cloud_token }}
+      cloud_token: ${{ secrets.cloud_token || '' }}
+      
   ##### end of ci steps #####
 
   ##### cd steps #####

@@ -6,7 +6,7 @@ inputs:
         required: true
     cloud_token_secret_name:
         description: 'The name of the secret containing the cloud token'
-        required: true
+        required: false
     cloud_provider:
         description: 'The cloud provider being used, e.g. aws, gcp, or azure'
         required: true

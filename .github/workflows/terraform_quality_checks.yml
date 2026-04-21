@@ -15,7 +15,6 @@ on:
       cloud_provider:
         required: true
         type: string
-
     secrets:
       cloud_token:
         required: false
@@ -32,6 +31,7 @@ permissions:
   actions: read 
 
 jobs:
+
   terraform-quality-checks:
     runs-on: ubuntu-24.04
     steps:
@@ -41,27 +41,19 @@ jobs:
         with:
           ref: ${{ inputs.branch }}
           fetch-depth: 0
-      
-      - name: run basic setup
-        uses: iac-pipeline/iac-pipeline/.github/workflows/basic_setup@develop
-        with:
-          iac_technology: ${{ inputs.iac_technology }}
-          cloud_token_secret_name: ${{ secrets.cloud_token }}
-          cloud_provider: '${{ inputs.cloud_provider }}'
-        if: ${{ inputs.cloud_provider == 'GCP'|| inputs.cloud_provider == 'Azure' }}
-      
-      - name: run basic setup
-        uses: iac-pipeline/iac-pipeline/.github/workflows/basic_setup@develop
-        with:
-          iac_technology: ${{ inputs.iac_technology }}
-          cloud_provider: '${{ inputs.cloud_provider }}'
-          aws_region: ${{ secrets.aws_region }}
-          aws_account_id: ${{ secrets.aws_account_id }}
-          aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
-        if: ${{ inputs.cloud_provider == 'AWS' }}
 
       - name: install checkov
         run: pip install checkov
+      
+      - name: authenticate to cloud provider
+        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
+        with:
+          cloud_provider: ${{ inputs.cloud_provider }}
+          iac_technology: ${{ inputs.iac_technology }}
+          cloud_token_secret_name: ${{ secrets.cloud_token }}
+          aws_region: ${{ secrets.aws_region }}
+          aws_account_id: ${{ secrets.aws_account_id }}
+          aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
 
           # please view:
       # https://www.checkov.io/8.Outputs/SARIF.html
