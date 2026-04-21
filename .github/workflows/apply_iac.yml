@@ -73,7 +73,7 @@ jobs:
                 for module in $modules_changes; do
                   if [[ -d "$module" ]] && [[ -f "$module/terragrunt.hcl" ]]; then
                     text_file_name=$(echo $module | tr '/' '_')
-                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --non-interactive -- -no-color -auto-approve 2>&1 | tee $file_path_apply_output/$text_file_name.txt
+                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --non-interactive -- -auto-approve 2>&1 | sed -r "s/\x1B\[[0-9;]*[mK]//g" | tee $file_path_apply_output/$text_file_name.txt
                     echo "command_status=$?" >> "${GITHUB_OUTPUT}"
                     if [[ $command_status -ne 0 ]]; then
                       echo "::error ::Apply failed for module $module with exit code $command_status"
