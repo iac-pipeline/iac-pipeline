@@ -129,9 +129,13 @@ jobs:
       lower_environment: ${{ needs.initialise_workflow.outputs.lower_environment }}
       higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       run_cd_checks: ${{ needs.initialise_workflow.outputs.run_cd_checks }}
+      cloud_provider: ${{ inputs.cloud_provider }}
     secrets:
       cloud_token: ${{ secrets.cloud_token || '' }}
-      
+      aws_region: ${{ secrets.aws_region || '' }}
+      aws_account_id: ${{ secrets.aws_account_id || '' }}
+      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+
   ##### end of ci steps #####
 
   ##### cd steps #####

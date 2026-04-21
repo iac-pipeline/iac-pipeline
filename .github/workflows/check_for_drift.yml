@@ -24,9 +24,18 @@ on:
       run_cd_checks:
         required: true
         type: string
+      cloud_provider:
+        required: true
+        type: string
     secrets:
       cloud_token:
-        required: true
+        required: false
+      aws_region:
+        required: false
+      aws_account_id:
+        required: false
+      aws_role_to_assume:
+        required: false
       
 # env:
 #   higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
@@ -39,31 +48,22 @@ jobs:
   check_for_drift:
     runs-on: ubuntu-24.04
     steps:
+
       - name: checkout higher branch
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.higher_branch }}
-          fetch-depth: 0
+          fetch-depth: 0      
       
-      - uses: 'google-github-actions/auth@v3'
+      - name: authenticate to cloud provider
+        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
         with:
-          credentials_json: '${{ secrets.cloud_token }}'
-
-      - name: Set up python 3.9
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.9
-      
-      - name: set up terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: "1.7.5"
-
-      - name: Install Terragrunt and OpenTofu
-        uses: gruntwork-io/terragrunt-action@v3
-        with:
-          tg_version: '0.99.1'
-          tf_path: ${{ inputs.iac_technology }}
+          cloud_provider: ${{ inputs.cloud_provider }}
+          iac_technology: ${{ inputs.iac_technology }}
+          cloud_token_secret_name: ${{ secrets.cloud_token }}
+          aws_region: ${{ secrets.aws_region }}
+          aws_account_id: ${{ secrets.aws_account_id }}
+          aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
       
       - name: check for drift
         id: check_state_of_environment
