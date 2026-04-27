@@ -20,11 +20,21 @@ on:
       environments:
         required: true
         type: string
+      cloud_provider:
+        required: true
+        type: string
     secrets:
       cloud_token:
-        required: true
+        required: false
+      aws_region:
+        required: false
+      aws_account_id:
+        required: false
+      aws_role_to_assume:
+        required: false
 
 permissions:
+  pull-requests: write
   contents: read 
   security-events: write 
   actions: read 
@@ -101,8 +111,13 @@ jobs:
       branch: ${{ inputs.branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
       higher_branch: ${{ inputs.higher_branch }}
+      cloud_provider: ${{ inputs.cloud_provider }}
     secrets:
-      cloud_token: ${{ secrets.cloud_token }}
+      cloud_token: ${{ secrets.cloud_token || '' }}
+      aws_region: ${{ secrets.aws_region || '' }}
+      aws_account_id: ${{ secrets.aws_account_id || '' }}
+      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+
 
   call-drift-detection:
     needs: initialise_workflow
@@ -113,8 +128,14 @@ jobs:
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology}}
       lower_environment: ${{ needs.initialise_workflow.outputs.lower_environment }}
       higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
+      run_cd_checks: ${{ needs.initialise_workflow.outputs.run_cd_checks }}
+      cloud_provider: ${{ inputs.cloud_provider }}
     secrets:
-      cloud_token: ${{ secrets.cloud_token }}
+      cloud_token: ${{ secrets.cloud_token || '' }}
+      aws_region: ${{ secrets.aws_region || '' }}
+      aws_account_id: ${{ secrets.aws_account_id || '' }}
+      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+
   ##### end of ci steps #####
 
   ##### cd steps #####
@@ -126,9 +147,11 @@ jobs:
       production_branch: ${{ inputs.higher_branch }}
       production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
+      cloud_provider: ${{ inputs.cloud_provider }}
     secrets:
-      cloud_token: ${{ secrets.cloud_token }}
-
-    
-
+      cloud_token: ${{ secrets.cloud_token }}  
+      aws_region: ${{ secrets.aws_region || '' }}
+      aws_account_id: ${{ secrets.aws_account_id || '' }}
+      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+  
   ### end of cd steps #####

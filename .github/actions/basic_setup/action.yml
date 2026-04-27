@@ -1,0 +1,60 @@
+name: Basic Setup
+description: This action performs basic setup for IaC workflows, including checking out code, authenticating
+inputs:
+    iac_technology:
+        description: 'The IaC technology being used, e.g. terraform or cloudformation'
+        required: true
+    cloud_token_secret_name:
+        description: 'The name of the secret containing the cloud token'
+        required: false
+    cloud_provider:
+        description: 'The cloud provider being used, e.g. aws, gcp, or azure'
+        required: true
+    aws_region:
+        description: 'The AWS region to use, required if cloud_provider is aws'
+        required: false
+    aws_account_id:
+        description: 'The AWS account ID, required if cloud_provider is aws'
+        required: false
+    aws_role_to_assume:
+        description: 'The AWS role to assume, required if cloud_provider is aws'
+        required: false
+
+runs:
+  using: "composite"
+  steps:
+  - name: authenticate to GCP
+    uses: 'google-github-actions/auth@v3'
+    with:
+      credentials_json: '${{ inputs.cloud_token_secret_name }}'
+    if: ${{ inputs.cloud_provider == 'GCP' }}
+  
+  - name: authenticate to aws
+    uses: aws-actions/configure-aws-credentials@v6.1.0
+    with:
+      role-to-assume: ${{ inputs.aws_role_to_assume }}
+      aws-region: ${{ inputs.aws_region }}
+      role-session-name: ${{ inputs.aws_account_id }}
+    if: ${{ inputs.cloud_provider == 'AWS' }}
+  
+  - name: authenticate to azure
+    uses: azure/login@v3
+    with:
+      creds: ${{ inputs.cloud_token_secret_name }}
+    if: ${{ inputs.cloud_provider == 'Azure' }}
+
+  - name: Set up python 3.9
+    uses: actions/setup-python@v4
+    with:
+      python-version: 3.9
+    
+  - name: set up terraform
+    uses: hashicorp/setup-terraform@v3
+    with:
+      terraform_version: "1.7.5"
+
+  - name: Install Terragrunt and OpenTofu
+    uses: gruntwork-io/terragrunt-action@v3
+    with:
+      tg_version: '0.99.1'
+      tf_path: ${{ inputs.iac_technology }}

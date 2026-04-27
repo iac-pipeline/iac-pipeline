@@ -12,11 +12,21 @@ on:
         iac_technology:
             required: true
             type: string
+        cloud_provider:
+            required: true
+            type: string
     secrets:
         cloud_token:
             required: true
+        aws_region:
+            required: false
+        aws_account_id:
+            required: false
+        aws_role_to_assume:
+            required: false
 
 permissions:
+  pull-requests: write
   contents: read 
   security-events: write 
   actions: read 
@@ -31,59 +41,89 @@ jobs:
                 ref: ${{ inputs.production_branch }}
                 fetch-depth: 0
 
-            - uses: 'google-github-actions/auth@v3'
+            - name: authenticate to cloud provider
+              uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
               with:
-                credentials_json: '${{ secrets.cloud_token }}'
-
-            - name: Set up python 3.9
-              uses: actions/setup-python@v4
-              with:
-                python-version: 3.9
-            
-            - name: set up terraform
-              uses: hashicorp/setup-terraform@v3
-              with:
-                terraform_version: "1.7.5"
-
-            - name: Install Terragrunt and OpenTofu
-              uses: gruntwork-io/terragrunt-action@v3
-              with:
-                tg_version: '0.99.1'
-                tf_path: ${{ inputs.iac_technology }}
+                cloud_provider: ${{ inputs.cloud_provider }}
+                iac_technology: ${{ inputs.iac_technology }}
+                cloud_token_secret_name: ${{ secrets.cloud_token }}
+                aws_region: ${{ secrets.aws_region }}
+                aws_account_id: ${{ secrets.aws_account_id }}
+                aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
             
             - name: apply iac
               id: apply_iac
               run: |
-                set -ex
+                set -x
+                file_path_apply_output="/tmp/${{ inputs.production_environment }}/apply_output"
+                echo "file_path_apply_output=$file_path_apply_output" >> "${GITHUB_OUTPUT}"
+                mkdir -p $file_path_apply_output
+
                 commit_before_merge=$(git rev-parse HEAD^1)
                 echo "Commit before merge: $commit_before_merge"
-                modules_changes=$(terragrunt find --filter "[${{ inputs.production_branch }} ... $commit_before_merge]" | grep /${{ inputs.production_environment }}/)
-                echo "Modules changed in this PR: $modules_changes"
+                modules_changes=$(terragrunt find --filter "[${{ inputs.production_branch }} ... $commit_before_merge]" | grep /${{ inputs.production_environment }}/ || true)
 
                 if [[ -z "$modules_changes" ]]; then
                   echo "No modules changed in this PR, skipping apply"
+                  echo "command_status=$?" >> "${GITHUB_OUTPUT}"
                   exit 0
                 fi
+                echo "Modules changed in this PR: $modules_changes"
 
                 for module in $modules_changes; do
                   if [[ -d "$module" ]] && [[ -f "$module/terragrunt.hcl" ]]; then
-                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --out-dir /tmp/${{ inputs.production_environment }}/tfplan --non-interactive -- -auto-approve
+                    text_file_name=$(echo $module | tr '/' '_')
+                    terragrunt apply --json-out-dir /tmp/${{ inputs.production_environment }}/json apply --working-dir "$module" --non-interactive -- -auto-approve 2>&1 | sed -r "s/\x1B\[[0-9;]*[mK]//g" | tee $file_path_apply_output/$text_file_name.txt
                     echo "command_status=$?" >> "${GITHUB_OUTPUT}"
+                    if [[ $command_status -ne 0 ]]; then
+                      echo "::error ::Apply failed for module $module with exit code $command_status"
+                      echo "failed_module=$module" >> "${GITHUB_OUTPUT}"
+                    fi
                   fi
                 done
                 echo "Modules changed: $modules_changes"
               continue-on-error: true
+
+            - name: merge apply output files
+              run: |
+                set +e
+                mkdir -p /tmp/final_apply/
+                find_all_apply_files=$(find ${{ steps.apply_iac.outputs.file_path_apply_output }}/*.txt || true)
+                if [[ -z "$find_all_apply_files" ]]; then
+                  echo "No apply output files found, skipping merge"
+                  echo "No apply occured" >> /tmp/final_apply/apply_output.txt
+                  exit 0
+                fi
+
+                for file in $find_all_apply_files; do
+                  cat $file >> /tmp/final_apply/apply_output.txt
+                done
               
+            - name: send feedback on failing apply
+              if: steps.apply_iac.outputs.command_status != '0'
+              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+              with:
+                custom_body_message: "Apply failed for module ${{ steps.apply_iac.outputs.failed_module }} with exit code ${{ steps.apply_iac.outputs.command_status }}. Please check the apply output for more details."
+                custom_plan_location: "/tmp/final_apply/apply_output.txt"
+            
+            - name: send feedback on apply
+              if: steps.apply_iac.outputs.command_status == '0'
+              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+              with:
+                custom_body_message: "No errors found during apply"
+                custom_plan_location: "/tmp/final_apply/apply_output.txt"
+
+
             - name: check apply status
               run: |
                 if [[ "${{ steps.apply_iac.outputs.command_status }}" == "0" ]]; then
                   echo "Apply successful for all modules"
                 else
-                  # next step get flaiure details from the json output and print them in the logs, this will help with debugging and understanding why the apply failed without having to go to the cloud provider console
+                  # next step get failure details from the json output and print them in the logs, this will help with debugging and understanding why the apply failed without having to go to the cloud provider console
                   for file in /tmp/${{ inputs.production_environment }}/json/*.json; do
                     cat $file
                   done
-                  echo "::error ::Apply failed for one or more modules with exit code ${{ steps.apply_iac.outputs.command_status}}"
-                  exit 1
+                  echo "::error ::Apply failed for one or more modules with exit code ${{ steps.apply_iac.outputs.command_status}} for module ${{ steps.apply_iac.outputs.failed_module }}"
                 fi
+            
 
