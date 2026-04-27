@@ -36,6 +36,9 @@ permissions:
   security-events: write 
   actions: read 
 
+env:
+  FILE_PATH_PLAN_TEXT: /tmp/plan/plan_output.txt
+
 jobs:
 
   terraform-quality-checks:
@@ -62,8 +65,19 @@ jobs:
           aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
           iac_technology_version: ${{ inputs.iac_technology_version }}
           repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
-
+      
+      - name: run plan 
+        run: | 
+          terragrunt run --all --filter-affected -- plan -out=plan.tfplan
+          terragrunt run --all --filter-affected --terragrunt-parallelism 1 -- show -no-color plan.tfplan > ${{ env.FILE_PATH_PLAN_TEXT }}
           # please view:
+      
+      - name: feedback plan to pr
+        uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+        with:
+            custom_body_message: "IaC Plan"
+            custom_plan_location: "${{env.FILE_PATH_PLAN_TEXT}}"
+
       # https://www.checkov.io/8.Outputs/SARIF.html
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
       - name: Run Checkov against Terraform code

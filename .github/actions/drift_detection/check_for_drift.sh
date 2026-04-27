@@ -15,6 +15,7 @@ for module in $(echo "$modules_changed" | jq -r '.[].path' | grep "$environment"
 
         terragrunt run plan --working-dir "$module" -- -out="$tf_plan_file_route/tfplan.binary"
         terragrunt show --working-dir "$module" -json $tf_plan_file_route/tfplan.binary > $tf_plan_json_route/tfplan.json
+        
 
         grab_json_body=$(jq -r '.resource_changes[] | select(.change.actions | index("no-op") | not) | "\(.address) → actions: \(.change.actions | join(", "))" ' $tf_plan_json_route/tfplan.json)    
         
