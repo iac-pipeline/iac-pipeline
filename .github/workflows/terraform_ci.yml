@@ -49,10 +49,6 @@ permissions:
   security-events: write 
   actions: read 
 
-env:
-  IAC_TECHNOLOGY_VERSION: ${{inputs.iac_technology_version}}
-  REPO_TERRAGRUNT_VERSION: ${{inputs.repo_terragrunt_version}}
-
 jobs:
   #Define the variables for the workflow
   initialise_workflow:
@@ -126,6 +122,8 @@ jobs:
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
       higher_branch: ${{ inputs.higher_branch }}
       cloud_provider: ${{ inputs.cloud_provider }}
+      iac_technology_version: ${{ inputs.iac_technology_version }}
+      repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}     
     secrets:
       cloud_token: ${{ secrets.cloud_token || '' }}
       aws_region: ${{ secrets.aws_region || '' }}
@@ -144,6 +142,8 @@ jobs:
       higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       run_cd_checks: ${{ needs.initialise_workflow.outputs.run_cd_checks }}
       cloud_provider: ${{ inputs.cloud_provider }}
+      iac_technology_version: ${{ inputs.iac_technology_version }}
+      repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
     secrets:
       cloud_token: ${{ secrets.cloud_token || '' }}
       aws_region: ${{ secrets.aws_region || '' }}
@@ -162,6 +162,8 @@ jobs:
       production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
       cloud_provider: ${{ inputs.cloud_provider }}
+      iac_technology_version: ${{ inputs.iac_technology_version }}
+      repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}  
       aws_region: ${{ secrets.aws_region || '' }}

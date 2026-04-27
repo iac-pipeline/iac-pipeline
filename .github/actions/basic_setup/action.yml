@@ -4,6 +4,12 @@ inputs:
     iac_technology:
         description: 'The IaC technology being used, e.g. terraform or cloudformation'
         required: true
+    iac_technology_version:
+        description: "the IaC technology version being utilised in the customers repo"
+        required: true
+    repo_terragrunt_version:
+        description: "terragrunt version being used in the customers repo"
+        required: true
     cloud_token_secret_name:
         description: 'The name of the secret containing the cloud token'
         required: false
@@ -51,10 +57,10 @@ runs:
   - name: set up terraform
     uses: hashicorp/setup-terraform@v3
     with:
-      terraform_version: ${{env.IAC_TECHNOLOGY_VERSION}}
+      terraform_version: ${{inputs.iac_technology_version}}
 
   - name: Install Terragrunt and OpenTofu
     uses: gruntwork-io/terragrunt-action@v3
     with:
-      tg_version: ${{env.REPO_TERRAGRUNT_VERSION}}
+      tg_version: ${{inputs.repo_terragrunt_version}}
       tf_path: ${{ inputs.iac_technology }}

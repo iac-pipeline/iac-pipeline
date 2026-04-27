@@ -27,6 +27,12 @@ on:
       cloud_provider:
         required: true
         type: string
+      iac_technology_version:
+        required: true
+        type: string
+      repo_terragrunt_version:
+        required: true
+        type: string
     secrets:
       cloud_token:
         required: false
@@ -64,6 +70,9 @@ jobs:
           aws_region: ${{ secrets.aws_region }}
           aws_account_id: ${{ secrets.aws_account_id }}
           aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
+          iac_technology_version: ${{ inputs.iac_technology_version }}
+          repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
+
       
       - name: check for drift
         id: check_state_of_environment
