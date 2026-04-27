@@ -32,6 +32,7 @@ on:
         required: false
 
 permissions:
+  pull-requests: write
   contents: read 
   security-events: write 
   actions: read 
