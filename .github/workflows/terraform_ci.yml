@@ -11,10 +11,20 @@ on:
         required: false
         type: string
         default: ${{ github.head_ref }}
-      # iac_tool:
-      #   required: true
-      #   type: string
+      iac_technology_version:
+      # IaC version that customer repo is using.
+      # helps ensure compatability
+        required: false
+        type: string
+        default: "1.7.5"
+      repo_terragrunt_version:
+      # Terragrunt version customer repo is using
+      # helps ensure compatability
+        required: false
+        type: string
+        default: "0.99.1"
       iac_technology:
+      #e.g. terraform
         required: true
         type: string
       environments:
@@ -38,6 +48,10 @@ permissions:
   contents: read 
   security-events: write 
   actions: read 
+
+env:
+  IAC_TECHNOLOGY_VERSION: ${{inputs.iac_technology_version}}
+  REPO_TERRAGRUNT_VERSION: ${{inputs.repo_terragrunt_version}}
 
 jobs:
   #Define the variables for the workflow
