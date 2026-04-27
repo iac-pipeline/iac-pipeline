@@ -113,6 +113,7 @@ jobs:
               with:
                 custom_body_message: "Apply failed for module ${{ steps.apply_iac.outputs.failed_module }} with exit code ${{ steps.apply_iac.outputs.command_status }}. Please check the apply output for more details."
                 custom_plan_location: "/tmp/final_apply/apply_output.txt"
+                comment_marker: "apply_faliure_feedback"
             
             - name: send feedback on apply
               if: steps.apply_iac.outputs.command_status == '0'
@@ -120,6 +121,7 @@ jobs:
               with:
                 custom_body_message: "No errors found during apply"
                 custom_plan_location: "/tmp/final_apply/apply_output.txt"
+                comment_marker: "apply_success_feedback"
 
 
             - name: check apply status

@@ -81,6 +81,7 @@ jobs:
         with:
             custom_body_message: "IaC Plan"
             custom_plan_location: "${{env.FILE_PATH_PLAN_TEXT}}"
+            comment_marker: "generic_plan_feedback"
 
       # https://www.checkov.io/8.Outputs/SARIF.html
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions

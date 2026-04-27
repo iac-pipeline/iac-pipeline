@@ -89,6 +89,7 @@ jobs:
         with:
           custom_plan_location: ${{ steps.check_state_of_environment.outputs.output_file_location }}
           custom_body_message: "Drift detected in module ${{ steps.check_state_of_environment.outputs.module_with_drift }}"
+          comment_marker: "drift_detection_failure"
       
       - name: end script with failure exit code
         if: steps.check_state_of_environment.outputs.check_for_drift_outcome == 'failure'
