@@ -51,10 +51,10 @@ runs:
   - name: set up terraform
     uses: hashicorp/setup-terraform@v3
     with:
-      terraform_version: "${{env.IAC_TECHNOLOGY_VERSION}}"
+      terraform_version: ${{env.IAC_TECHNOLOGY_VERSION}}
 
   - name: Install Terragrunt and OpenTofu
     uses: gruntwork-io/terragrunt-action@v3
     with:
-      tg_version: "{{env.REPO_TERRAGRUNT_VERSION}}"
+      tg_version: ${{env.REPO_TERRAGRUNT_VERSION}}
       tf_path: ${{ inputs.iac_technology }}
