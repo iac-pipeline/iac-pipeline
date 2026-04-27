@@ -76,12 +76,19 @@ jobs:
           mkdir -p /tmp/plan
           terragrunt run --all --filter "[${{inputs.higher_branch}} ... ${{inputs.branch}}]" plan 2>&1 | sed -r "s/\x1B\[[0-9;]*[mK]//g" | tee ${{ env.FILE_PATH_PLAN_TEXT }}
       
-      - name: feedback plan to pr
-        uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+      # - name: feedback plan to pr
+      #   uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+      #   with:
+      #       custom_body_message: "IaC Plan"
+      #       custom_plan_location: "${{env.FILE_PATH_PLAN_TEXT}}"
+      #       comment_marker: "generic_plan_feedback"
+
+      # utilising artifact due to api size constraints
+      - uses: actions/upload-artifact@v4
         with:
-            custom_body_message: "IaC Plan"
-            custom_plan_location: "${{env.FILE_PATH_PLAN_TEXT}}"
-            comment_marker: "generic_plan_feedback"
+          name: plan-output
+          path: ${{ env.FILE_PATH_PLAN_TEXT }}
+          overwrite: true
 
       # https://www.checkov.io/8.Outputs/SARIF.html
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
