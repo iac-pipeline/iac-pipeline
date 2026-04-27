@@ -45,11 +45,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
 
-      - name: checkout lower branch
+      - name: checkout 
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{inputs.higher_branch}}
           fetch-depth: 0
+      
+      - name: checkout
+        run: |
+          git checkout ${{inputs.branch}}
 
       - name: install checkov
         run: pip install checkov
@@ -68,9 +72,8 @@ jobs:
       
       - name: run plan 
         run: | 
-          terragrunt run --all --filter-affected -- plan -out=plan.tfplan
-          terragrunt run --all --filter-affected --terragrunt-parallelism 1 -- show -no-color plan.tfplan > ${{ env.FILE_PATH_PLAN_TEXT }}
-          # please view:
+          mkdir -p /tmp/plan
+          terragrunt run --all --filter "[${{inputs.higher_branch}} ... ${{inputs.branch}}]" plan 2>&1 | sed -r "s/\x1B\[[0-9;]*[mK]//g" | tee ${{ env.FILE_PATH_PLAN_TEXT }}
       
       - name: feedback plan to pr
         uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
