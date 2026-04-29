@@ -26,9 +26,9 @@ on:
             required: true
         aws_region:
             required: false
-        aws_account_id:
+        aws_secret_access_key:
             required: false
-        aws_role_to_assume:
+        aws_access_key_id:
             required: false
 
 permissions:
@@ -54,8 +54,8 @@ jobs:
                 iac_technology: ${{ inputs.iac_technology }}
                 cloud_token_secret_name: ${{ secrets.cloud_token }}
                 aws_region: ${{ secrets.aws_region }}
-                aws_account_id: ${{ secrets.aws_account_id }}
-                aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
+                aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
+                aws_access_key_id: ${{ secrets.aws_access_key_id }}
                 iac_technology_version: ${{ inputs.iac_technology_version }}
                 repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
             

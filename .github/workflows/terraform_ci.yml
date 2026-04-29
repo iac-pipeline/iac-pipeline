@@ -38,9 +38,9 @@ on:
         required: false
       aws_region:
         required: false
-      aws_account_id:
+      aws_secret_access_key:
         required: false
-      aws_role_to_assume:
+      aws_access_key_id:
         required: false
 
 permissions:
@@ -127,8 +127,8 @@ jobs:
     secrets:
       cloud_token: ${{ secrets.cloud_token || '' }}
       aws_region: ${{ secrets.aws_region || '' }}
-      aws_account_id: ${{ secrets.aws_account_id || '' }}
-      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+      aws_secret_access_key: ${{ secrets.aws_secret_access_key || '' }}
+      aws_access_key_id: ${{ secrets.aws_access_key_id || '' }}
 
 
   call-drift-detection:
@@ -147,8 +147,8 @@ jobs:
     secrets:
       cloud_token: ${{ secrets.cloud_token || '' }}
       aws_region: ${{ secrets.aws_region || '' }}
-      aws_account_id: ${{ secrets.aws_account_id || '' }}
-      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+      aws_secret_access_key: ${{ secrets.aws_secret_access_key || '' }}
+      aws_access_key_id: ${{ secrets.aws_access_key_id || '' }}
 
   ##### end of ci steps #####
 
@@ -167,7 +167,7 @@ jobs:
     secrets:
       cloud_token: ${{ secrets.cloud_token }}  
       aws_region: ${{ secrets.aws_region || '' }}
-      aws_account_id: ${{ secrets.aws_account_id || '' }}
-      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+      aws_secret_access_key: ${{ secrets.aws_secret_access_key || '' }}
+      aws_access_key_id: ${{ secrets.aws_access_key_id || '' }}
   
   ### end of cd steps #####

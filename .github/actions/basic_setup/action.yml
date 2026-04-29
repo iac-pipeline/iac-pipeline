@@ -19,11 +19,11 @@ inputs:
     aws_region:
         description: 'The AWS region to use, required if cloud_provider is aws'
         required: false
-    aws_account_id:
-        description: 'The AWS account ID, required if cloud_provider is aws'
+    aws_access_key_id:
+        description: 'The AWS access key ID, required if cloud_provider is aws'
         required: false
-    aws_role_to_assume:
-        description: 'The AWS role to assume, required if cloud_provider is aws'
+    aws_secret_access_key:
+        description: 'The AWS secret access key, required if cloud_provider is aws'
         required: false
 
 runs:
@@ -38,9 +38,9 @@ runs:
   - name: authenticate to aws
     uses: aws-actions/configure-aws-credentials@v6.1.0
     with:
-      role-to-assume: ${{ inputs.aws_role_to_assume }}
-      aws-region: ${{ inputs.aws_region }}
-      role-session-name: ${{ inputs.aws_account_id }}
+      aws-access-key-id: ${{ inputs.aws_access_key_id }}
+      aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+      aws-region: eu-west-1
     if: ${{ inputs.cloud_provider == 'AWS' }}
   
   - name: authenticate to azure
