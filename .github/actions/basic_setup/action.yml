@@ -4,6 +4,12 @@ inputs:
     iac_technology:
         description: 'The IaC technology being used, e.g. terraform or cloudformation'
         required: true
+    iac_technology_version:
+        description: "the IaC technology version being utilised in the customers repo"
+        required: true
+    repo_terragrunt_version:
+        description: "terragrunt version being used in the customers repo"
+        required: true
     cloud_token_secret_name:
         description: 'The name of the secret containing the cloud token'
         required: false
@@ -13,11 +19,11 @@ inputs:
     aws_region:
         description: 'The AWS region to use, required if cloud_provider is aws'
         required: false
-    aws_account_id:
-        description: 'The AWS account ID, required if cloud_provider is aws'
+    aws_access_key_id:
+        description: 'The AWS access key ID, required if cloud_provider is aws'
         required: false
-    aws_role_to_assume:
-        description: 'The AWS role to assume, required if cloud_provider is aws'
+    aws_secret_access_key:
+        description: 'The AWS secret access key, required if cloud_provider is aws'
         required: false
 
 runs:
@@ -32,9 +38,9 @@ runs:
   - name: authenticate to aws
     uses: aws-actions/configure-aws-credentials@v6.1.0
     with:
-      role-to-assume: ${{ inputs.aws_role_to_assume }}
-      aws-region: ${{ inputs.aws_region }}
-      role-session-name: ${{ inputs.aws_account_id }}
+      aws-access-key-id: ${{ inputs.aws_access_key_id }}
+      aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+      aws-region: eu-west-1
     if: ${{ inputs.cloud_provider == 'AWS' }}
   
   - name: authenticate to azure
@@ -51,10 +57,10 @@ runs:
   - name: set up terraform
     uses: hashicorp/setup-terraform@v3
     with:
-      terraform_version: "1.7.5"
+      terraform_version: ${{inputs.iac_technology_version}}
 
   - name: Install Terragrunt and OpenTofu
     uses: gruntwork-io/terragrunt-action@v3
     with:
-      tg_version: '0.99.1'
+      tg_version: ${{inputs.repo_terragrunt_version}}
       tf_path: ${{ inputs.iac_technology }}
