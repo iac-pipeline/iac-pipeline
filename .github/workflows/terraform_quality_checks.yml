@@ -71,10 +71,14 @@ jobs:
           iac_technology_version: ${{ inputs.iac_technology_version }}
           repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
       
-      - name: run plan 
+      - name: run IaC plan 
+        id: runs_iac_plan
         run: | 
           mkdir -p /tmp/plan
           terragrunt run --all --filter "[${{inputs.higher_branch}} ... ${{inputs.branch}}]" plan 2>&1 | sed -r "s/\x1B\[[0-9;]*[mK]//g" | tee ${{ env.FILE_PATH_PLAN_TEXT }}
+          echo "plan_exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
       
       # - name: feedback plan to pr
       #   uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
@@ -93,6 +97,7 @@ jobs:
       # https://www.checkov.io/8.Outputs/SARIF.html
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
       - name: Run Checkov against Terraform code
+        id: run_checkov
         run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
         continue-on-error: true
 
@@ -104,3 +109,15 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: /tmp/results_sarif.sarif
+      
+      - name: throw error if IAC plan failed
+        run: |
+          echo "::error ::the IaC plan failed with exit code ${{ steps.runs_iac_plan.outputs.plan_exit_code }}. Please check the plan output artifact for more details"
+          exit 1
+        if: steps.runs_iac_plan.outputs.plan_exit_code != '0'
+      
+      - name: throw error if checkov found any issues
+        run: |
+          echo "::error ::Checkov scan found issues in the code. Please check the code scanning alerts or PR comments for more details"
+          exit 1
+        if: steps.run_checkov.outcome == 'failure'
