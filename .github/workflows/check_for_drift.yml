@@ -62,7 +62,7 @@ jobs:
           fetch-depth: 0      
       
       - name: authenticate to cloud provider
-        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
+        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@main
         with:
           cloud_provider: ${{ inputs.cloud_provider }}
           iac_technology: ${{ inputs.iac_technology }}
@@ -76,7 +76,7 @@ jobs:
       
       - name: check for drift
         id: check_state_of_environment
-        uses: iac-pipeline/iac-pipeline/.github/actions/drift_detection@develop
+        uses: iac-pipeline/iac-pipeline/.github/actions/drift_detection@main
         with:
           branch: ${{ inputs.branch }}
           higher_branch: ${{ inputs.higher_branch }}
@@ -85,7 +85,7 @@ jobs:
       
       - name: send comment to user on PR
         if: steps.check_state_of_environment.outputs.check_for_drift_outcome == 'failure'
-        uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+        uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@main
         with:
           custom_plan_location: ${{ steps.check_state_of_environment.outputs.output_file_location }}
           custom_body_message: "Drift detected in module ${{ steps.check_state_of_environment.outputs.module_with_drift }}"

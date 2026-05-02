@@ -59,7 +59,7 @@ jobs:
         run: pip install checkov
       
       - name: authenticate to cloud provider
-        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
+        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@main
         with:
           cloud_provider: ${{ inputs.cloud_provider }}
           iac_technology: ${{ inputs.iac_technology }}
@@ -80,7 +80,7 @@ jobs:
 
       
       # - name: feedback plan to pr
-      #   uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+      #   uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@main
       #   with:
       #       custom_body_message: "IaC Plan"
       #       custom_plan_location: "${{env.FILE_PATH_PLAN_TEXT}}"

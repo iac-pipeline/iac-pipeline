@@ -51,7 +51,7 @@ jobs:
                 fetch-depth: 0
 
             - name: authenticate to cloud provider
-              uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
+              uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@main
               with:
                 cloud_provider: ${{ inputs.cloud_provider }}
                 iac_technology: ${{ inputs.iac_technology }}
@@ -112,7 +112,7 @@ jobs:
               
             - name: send feedback on failing apply
               if: steps.apply_iac.outputs.command_status != '0'
-              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@main
               with:
                 custom_body_message: "Apply failed for module ${{ steps.apply_iac.outputs.failed_module }} with exit code ${{ steps.apply_iac.outputs.command_status }}. Please check the apply output for more details."
                 custom_plan_location: "${{ env.FINAL_APPLY_LOCATION_FILE_PATH }}"
@@ -120,7 +120,7 @@ jobs:
             
             - name: send feedback on apply
               if: steps.apply_iac.outputs.command_status == '0'
-              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@main
               with:
                 custom_body_message: "No errors found during apply"
                 comment_marker: "apply_success_feedback"
