@@ -11,10 +11,20 @@ on:
         required: false
         type: string
         default: ${{ github.head_ref }}
-      # iac_tool:
-      #   required: true
-      #   type: string
+      iac_technology_version:
+      # IaC version that customer repo is using.
+      # helps ensure compatability
+        required: false
+        type: string
+        default: "1.7.5"
+      repo_terragrunt_version:
+      # Terragrunt version customer repo is using
+      # helps ensure compatability
+        required: false
+        type: string
+        default: "0.99.1"
       iac_technology:
+      #e.g. terraform
         required: true
         type: string
       environments:
@@ -28,9 +38,9 @@ on:
         required: false
       aws_region:
         required: false
-      aws_account_id:
+      aws_secret_access_key:
         required: false
-      aws_role_to_assume:
+      aws_access_key_id:
         required: false
 
 permissions:
@@ -112,11 +122,13 @@ jobs:
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
       higher_branch: ${{ inputs.higher_branch }}
       cloud_provider: ${{ inputs.cloud_provider }}
+      iac_technology_version: ${{ inputs.iac_technology_version }}
+      repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}     
     secrets:
       cloud_token: ${{ secrets.cloud_token || '' }}
       aws_region: ${{ secrets.aws_region || '' }}
-      aws_account_id: ${{ secrets.aws_account_id || '' }}
-      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+      aws_secret_access_key: ${{ secrets.aws_secret_access_key || '' }}
+      aws_access_key_id: ${{ secrets.aws_access_key_id || '' }}
 
 
   call-drift-detection:
@@ -130,11 +142,13 @@ jobs:
       higher_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       run_cd_checks: ${{ needs.initialise_workflow.outputs.run_cd_checks }}
       cloud_provider: ${{ inputs.cloud_provider }}
+      iac_technology_version: ${{ inputs.iac_technology_version }}
+      repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
     secrets:
       cloud_token: ${{ secrets.cloud_token || '' }}
       aws_region: ${{ secrets.aws_region || '' }}
-      aws_account_id: ${{ secrets.aws_account_id || '' }}
-      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+      aws_secret_access_key: ${{ secrets.aws_secret_access_key || '' }}
+      aws_access_key_id: ${{ secrets.aws_access_key_id || '' }}
 
   ##### end of ci steps #####
 
@@ -148,10 +162,12 @@ jobs:
       production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
       cloud_provider: ${{ inputs.cloud_provider }}
+      iac_technology_version: ${{ inputs.iac_technology_version }}
+      repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
     secrets:
       cloud_token: ${{ secrets.cloud_token }}  
       aws_region: ${{ secrets.aws_region || '' }}
-      aws_account_id: ${{ secrets.aws_account_id || '' }}
-      aws_role_to_assume: ${{ secrets.aws_role_to_assume || '' }}
+      aws_secret_access_key: ${{ secrets.aws_secret_access_key || '' }}
+      aws_access_key_id: ${{ secrets.aws_access_key_id || '' }}
   
   ### end of cd steps #####

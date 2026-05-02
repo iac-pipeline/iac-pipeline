@@ -59,3 +59,4 @@ runs:
             terragrunt show ${{ env.tf_plan_file_route }}/tfplan.binary --working-dir ${{ steps.check_state_of_environment_step.outputs.module_with_drift }} --no-color 2>&1 | tee $plan_output_file
           shell: bash
         
+        

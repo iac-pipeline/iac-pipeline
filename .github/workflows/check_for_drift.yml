@@ -27,14 +27,20 @@ on:
       cloud_provider:
         required: true
         type: string
+      iac_technology_version:
+        required: true
+        type: string
+      repo_terragrunt_version:
+        required: true
+        type: string
     secrets:
       cloud_token:
         required: false
       aws_region:
         required: false
-      aws_account_id:
+      aws_secret_access_key:
         required: false
-      aws_role_to_assume:
+      aws_access_key_id:
         required: false
       
 # env:
@@ -62,8 +68,11 @@ jobs:
           iac_technology: ${{ inputs.iac_technology }}
           cloud_token_secret_name: ${{ secrets.cloud_token }}
           aws_region: ${{ secrets.aws_region }}
-          aws_account_id: ${{ secrets.aws_account_id }}
-          aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
+          aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
+          aws_access_key_id: ${{ secrets.aws_access_key_id }}
+          iac_technology_version: ${{ inputs.iac_technology_version }}
+          repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
+
       
       - name: check for drift
         id: check_state_of_environment
@@ -80,6 +89,7 @@ jobs:
         with:
           custom_plan_location: ${{ steps.check_state_of_environment.outputs.output_file_location }}
           custom_body_message: "Drift detected in module ${{ steps.check_state_of_environment.outputs.module_with_drift }}"
+          comment_marker: "drift_detection_failure"
       
       - name: end script with failure exit code
         if: steps.check_state_of_environment.outputs.check_for_drift_outcome == 'failure'

@@ -15,20 +15,30 @@ on:
       cloud_provider:
         required: true
         type: string
+      iac_technology_version:
+        required: true
+        type: string
+      repo_terragrunt_version:
+        required: true
+        type: string
     secrets:
       cloud_token:
         required: false
       aws_region:
         required: false
-      aws_account_id:
+      aws_secret_access_key:
         required: false
-      aws_role_to_assume:
+      aws_access_key_id:
         required: false
 
 permissions:
+  pull-requests: write
   contents: read 
   security-events: write 
   actions: read 
+
+env:
+  FILE_PATH_PLAN_TEXT: /tmp/plan/plan_output.txt
 
 jobs:
 
@@ -36,11 +46,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
 
-      - name: checkout lower branch
+      - name: checkout 
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{inputs.higher_branch}}
           fetch-depth: 0
+      
+      - name: checkout
+        run: |
+          git checkout ${{inputs.branch}}
 
       - name: install checkov
         run: pip install checkov
@@ -52,13 +66,38 @@ jobs:
           iac_technology: ${{ inputs.iac_technology }}
           cloud_token_secret_name: ${{ secrets.cloud_token }}
           aws_region: ${{ secrets.aws_region }}
-          aws_account_id: ${{ secrets.aws_account_id }}
-          aws_role_to_assume: ${{ secrets.aws_role_to_assume }}
+          aws_secret_access_key: ${{ secrets.aws_secret_access_key }}
+          aws_access_key_id: ${{ secrets.aws_access_key_id }}
+          iac_technology_version: ${{ inputs.iac_technology_version }}
+          repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
+      
+      - name: run IaC plan 
+        id: runs_iac_plan
+        run: | 
+          mkdir -p /tmp/plan
+          terragrunt run --all --filter "[${{inputs.higher_branch}} ... ${{inputs.branch}}]" plan 2>&1 | sed -r "s/\x1B\[[0-9;]*[mK]//g" | tee ${{ env.FILE_PATH_PLAN_TEXT }}
+          echo "plan_exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+        continue-on-error: true
 
-          # please view:
+      
+      # - name: feedback plan to pr
+      #   uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+      #   with:
+      #       custom_body_message: "IaC Plan"
+      #       custom_plan_location: "${{env.FILE_PATH_PLAN_TEXT}}"
+      #       comment_marker: "generic_plan_feedback"
+
+      # utilising artifact due to api size constraints
+      - uses: actions/upload-artifact@v4
+        with:
+          name: plan-output
+          path: ${{ env.FILE_PATH_PLAN_TEXT }}
+          overwrite: true
+
       # https://www.checkov.io/8.Outputs/SARIF.html
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
       - name: Run Checkov against Terraform code
+        id: run_checkov
         run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
         continue-on-error: true
 
@@ -70,3 +109,15 @@ jobs:
         uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: /tmp/results_sarif.sarif
+      
+      - name: throw error if IAC plan failed
+        run: |
+          echo "::error ::the IaC plan failed with exit code ${{ steps.runs_iac_plan.outputs.plan_exit_code }}. Please check the plan output artifact for more details"
+          exit 1
+        if: steps.runs_iac_plan.outputs.plan_exit_code != '0'
+      
+      - name: throw error if checkov found any issues
+        run: |
+          echo "::error ::Checkov scan found issues in the code. Please check the code scanning alerts or PR comments for more details"
+          exit 1
+        if: steps.run_checkov.outcome == 'failure'

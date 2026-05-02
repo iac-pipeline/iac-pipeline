@@ -67,4 +67,5 @@ environments: |
 
 
 **Design**
-<img width="651" height="1102" alt="diss pipeline(6)" src="https://github.com/user-attachments/assets/d8533317-d35c-4fbb-b4fd-ce671617d6f2" />
+<img width="648" height="1098" alt="diss pipeline drawio" src="https://github.com/user-attachments/assets/327d89ad-285e-49b5-b114-1a5b97ac3ee5" />
+
