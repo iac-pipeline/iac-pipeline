@@ -97,7 +97,8 @@ jobs:
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
       - name: Run Checkov against Terraform code
         id: run_checkov
-        run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
+        run: | 
+          checkov -d . --output sarif --framework terraform --output-file-path /tmp/ --repo-root-for-plan-enrichment .
         continue-on-error: true
 
       - name: show sarif file
