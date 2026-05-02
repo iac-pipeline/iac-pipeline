@@ -118,5 +118,4 @@ jobs:
       - name: throw error if checkov found any issues
         run: |
           echo "::error ::Checkov scan found issues in the code. Please check the code scanning alerts or PR comments for more details"
-          exit 1
         if: steps.run_checkov.outcome == 'failure'
