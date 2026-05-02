@@ -74,7 +74,7 @@ jobs:
         id: runs_iac_plan
         run: | 
           mkdir -p /tmp/plan
-          terragrunt run --all --filter "[${{inputs.higher_branch}} ... ${{inputs.branch}}]" plan 2>&1 | tee ${{ env.FILE_PATH_PLAN_TEXT }}
+          terragrunt run --all --filter "[${{inputs.higher_branch}} ... ${{inputs.branch}}]" plan 2>&1 | sed -r "s/\x1B\[[0-9;]*[mK]//g" | tee ${{ env.FILE_PATH_PLAN_TEXT }}
           echo "plan_exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
         continue-on-error: true
 
