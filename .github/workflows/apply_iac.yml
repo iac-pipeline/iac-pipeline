@@ -37,18 +37,21 @@ permissions:
   security-events: write 
   actions: read 
 
+env:
+  FINAL_APPLY_LOCATION_FILE_PATH: /tmp/final_apply/apply_output.txt
+
 jobs:
     apply_iac:
         runs-on: ubuntu-24.04
         steps:
             - name: checkout code
-              uses: actions/checkout@v4
+              uses: actions/checkout@v5
               with:
                 ref: ${{ inputs.production_branch }}
                 fetch-depth: 0
 
             - name: authenticate to cloud provider
-              uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
+              uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@main
               with:
                 cloud_provider: ${{ inputs.cloud_provider }}
                 iac_technology: ${{ inputs.iac_technology }}
@@ -99,30 +102,28 @@ jobs:
                 find_all_apply_files=$(find ${{ steps.apply_iac.outputs.file_path_apply_output }}/*.txt || true)
                 if [[ -z "$find_all_apply_files" ]]; then
                   echo "No apply output files found, skipping merge"
-                  echo "No apply occured" >> /tmp/final_apply/apply_output.txt
+                  echo "No apply occured" >> ${{ env.FINAL_APPLY_LOCATION_FILE_PATH }}
                   exit 0
                 fi
 
                 for file in $find_all_apply_files; do
-                  cat $file >> /tmp/final_apply/apply_output.txt
+                  cat $file >> ${{ env.FINAL_APPLY_LOCATION_FILE_PATH }}
                 done
               
             - name: send feedback on failing apply
               if: steps.apply_iac.outputs.command_status != '0'
-              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@main
               with:
                 custom_body_message: "Apply failed for module ${{ steps.apply_iac.outputs.failed_module }} with exit code ${{ steps.apply_iac.outputs.command_status }}. Please check the apply output for more details."
-                custom_plan_location: "/tmp/final_apply/apply_output.txt"
+                custom_plan_location: "${{ env.FINAL_APPLY_LOCATION_FILE_PATH }}"
                 comment_marker: "apply_faliure_feedback"
             
             - name: send feedback on apply
               if: steps.apply_iac.outputs.command_status == '0'
-              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+              uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@main
               with:
                 custom_body_message: "No errors found during apply"
-                custom_plan_location: "/tmp/final_apply/apply_output.txt"
                 comment_marker: "apply_success_feedback"
-
 
             - name: check apply status
               run: |

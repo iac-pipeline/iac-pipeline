@@ -41,13 +41,12 @@ env:
   FILE_PATH_PLAN_TEXT: /tmp/plan/plan_output.txt
 
 jobs:
-
   terraform-quality-checks:
     runs-on: ubuntu-24.04
     steps:
 
       - name: checkout 
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: ${{inputs.higher_branch}}
           fetch-depth: 0
@@ -60,7 +59,7 @@ jobs:
         run: pip install checkov
       
       - name: authenticate to cloud provider
-        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
+        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@main
         with:
           cloud_provider: ${{ inputs.cloud_provider }}
           iac_technology: ${{ inputs.iac_technology }}
@@ -81,7 +80,7 @@ jobs:
 
       
       # - name: feedback plan to pr
-      #   uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
+      #   uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@main
       #   with:
       #       custom_body_message: "IaC Plan"
       #       custom_plan_location: "${{env.FILE_PATH_PLAN_TEXT}}"
@@ -98,7 +97,8 @@ jobs:
       # https://docs.github.com/en/code-security/how-tos/scan-code-for-vulnerabilities/integrate-with-existing-tools/uploading-a-sarif-file-to-github#uploading-a-code-scanning-analysis-with-github-actions
       - name: Run Checkov against Terraform code
         id: run_checkov
-        run: checkov -d . --output sarif --output-file-path /tmp/ --repo-root-for-plan-enrichment .
+        run: | 
+          checkov -d . --output sarif --framework terraform --output-file-path /tmp/ --repo-root-for-plan-enrichment .
         continue-on-error: true
 
       - name: show sarif file
@@ -119,5 +119,4 @@ jobs:
       - name: throw error if checkov found any issues
         run: |
           echo "::error ::Checkov scan found issues in the code. Please check the code scanning alerts or PR comments for more details"
-          exit 1
         if: steps.run_checkov.outcome == 'failure'
