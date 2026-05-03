@@ -125,6 +125,13 @@ jobs:
                 custom_body_message: "No errors found during apply"
                 comment_marker: "apply_success_feedback"
 
+            - name: upload artifact to apply output
+              uses: actions/upload-artifact@v4
+              with:
+                name: apply-output
+                path: ${{ env.FINAL_APPLY_LOCATION_FILE_PATH }}
+                overwrite: true
+
             - name: check apply status
               run: |
                 if [[ "${{ steps.apply_iac.outputs.command_status }}" == "0" ]]; then
