@@ -1,10 +1,14 @@
+set -x
+if [ -z "$custom_plan_location" ]; then
+  body_to_post="<!-- ${comment_marker} -->
+### ${body_message_to_post} ###"
+else
+  plan_content=$(cat "$custom_plan_location")
+  body_to_post="<!-- ${comment_marker} -->
+### ${body_message_to_post} ###
+${plan_content}"
+fi
 
-body_to_post=$(cat << EOF
-<!-- ${comment_marker} -->
-### $body_message_to_post ###
-$(cat "$custom_plan_location")
-EOF
-)
 
 set -e
 echo "$body_to_post"
