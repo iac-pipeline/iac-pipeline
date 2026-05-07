@@ -1,30 +1,32 @@
+marker_tag="<!-- ${comment_marker} -->"
 
 if [ -z "$custom_plan_location" ]; then
-body_to_post=$(cat << EOF
-<!-- ${comment_marker} -->
+  body_to_post=$(cat << EOF
+${marker_tag}
 ### $body_message_to_post ###
 EOF
 )
 else
-body_to_post=$(cat << EOF
-<!-- ${comment_marker} -->
+  body_to_post=$(cat << EOF
+${marker_tag}
 ### $body_message_to_post ###
 $(cat "$custom_plan_location")
 EOF
 )
 fi
 
-
 set -e
 echo "$body_to_post"
 
 # locate existing comment
-existing_comment_id=$(curl -s -L \
+comments_response=$(curl -s -L \
   -H "Accept: application/vnd.github+json" \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
-  "https://api.github.com/repos/$client_repository/issues/$client_pull_request_number/comments" \
-  | jq -r --arg marker "<!-- ${comment_marker} -->" \
+  "https://api.github.com/repos/$client_repository/issues/$client_pull_request_number/comments")
+
+existing_comment_id=$(echo "$comments_response" \
+  | jq -r --arg marker "$marker_tag" \
     '[.[] | select(.body | contains($marker))] | first | .id // empty')
 
 if [ -n "$existing_comment_id" ]; then
