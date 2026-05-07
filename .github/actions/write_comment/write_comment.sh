@@ -1,3 +1,11 @@
+set -x
+if [ -z "$custom_plan_location" ]; then
+body_to_post=$(cat << EOF
+<!-- ${comment_marker} -->
+### $body_message_to_post ###
+EOF
+)
+fi
 body_to_post=$(cat << EOF
 <!-- ${comment_marker} -->
 ### $body_message_to_post ###
