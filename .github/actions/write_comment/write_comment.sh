@@ -1,4 +1,4 @@
-set -x
+
 if [ -z "$custom_plan_location" ]; then
 body_to_post=$(cat << EOF
 <!-- ${comment_marker} -->
@@ -14,6 +14,7 @@ EOF
 )
 fi
 
+
 set -e
 echo "$body_to_post"
 
@@ -23,8 +24,8 @@ existing_comment_id=$(curl -s -L \
   -H "Authorization: Bearer $GITHUB_TOKEN" \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   "https://api.github.com/repos/$client_repository/issues/$client_pull_request_number/comments" \
-  | jq -r --arg marker "$comment_marker" \
-    '[.[] | select(.body | contains("<!-- " + $marker + " -->"))] | first | .id // empty')
+  | jq -r --arg marker "<!-- ${comment_marker} -->" \
+    '[.[] | select(.body | contains($marker))] | first | .id // empty')
 
 if [ -n "$existing_comment_id" ]; then
   # Update existing comment
