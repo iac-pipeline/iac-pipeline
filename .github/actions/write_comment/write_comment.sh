@@ -25,7 +25,7 @@ comments_response=$(curl -s -L \
   -H "X-GitHub-Api-Version: 2022-11-28" \
   "https://api.github.com/repos/$client_repository/issues/$client_pull_request_number/comments")
 
-  echo "Comments response: $comments_response"
+echo "Comments response: $comments_response"
 
 existing_comment_id=$(echo "$comments_response" \
   | jq -r --arg marker "$marker_tag" \

@@ -10,6 +10,9 @@ inputs:
   comment_marker:
     description: 'identifier for comments to prevent spam in pr'
     required: true
+  github_token:
+    description: 'The GitHub token'
+    required: true
 
 runs:
   using: "composite"
@@ -23,3 +26,5 @@ runs:
         custom_plan_location: ${{ inputs.custom_plan_location }}
         body_message_to_post: ${{ inputs.custom_body_message }}
         comment_marker: ${{ inputs.comment_marker }}
+        github_token: ${{ inputs.github_token }}
+
