@@ -120,7 +120,6 @@ jobs:
               uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@develop
               with:
                 custom_body_message: "Apply failed for module ${{ steps.apply_iac.outputs.failed_module }} with exit code ${{ steps.apply_iac.outputs.command_status }}. Please check the apply output for more details."
-                custom_plan_location: "${{ env.FINAL_APPLY_LOCATION_FILE_PATH }}"
                 comment_marker: "apply_faliure_feedback"
             
             - name: send feedback on apply
