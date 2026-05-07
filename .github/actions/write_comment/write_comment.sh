@@ -5,13 +5,14 @@ body_to_post=$(cat << EOF
 ### $body_message_to_post ###
 EOF
 )
-fi
+else
 body_to_post=$(cat << EOF
 <!-- ${comment_marker} -->
 ### $body_message_to_post ###
 $(cat "$custom_plan_location")
 EOF
 )
+fi
 
 set -e
 echo "$body_to_post"
