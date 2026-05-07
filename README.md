@@ -85,11 +85,11 @@ environments: |
 
 ***AWS Auth***
     
-    ```aws_region``` - This key should be the default AWS region.
+    aws_region - This key should be the default AWS region.
     
-    ```aws_secret_access_key``` - AWS IAM secret access key.
+    aws_secret_access_key - AWS IAM secret access key.
     
-    ```aws_access_key_id``` - ID of the relavent access key
+    aws_access_key_id - ID of the relavent access key
 
 ***GCP&AZURE**
     ```cloud_token``` - Access token for the cloud provider in question.
