@@ -43,8 +43,7 @@ on:
       aws_access_key_id:
         required: false
       
-# env:
-#   higher_branch: ${{ inputs.branch == 'develop' && 'main' }}
+
 permissions:
   pull-requests: write
   contents: read 

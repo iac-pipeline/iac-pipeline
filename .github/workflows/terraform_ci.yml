@@ -3,6 +3,12 @@ run-name: Checking code quality for ${{ github.actor }}
 on:
   workflow_call:
     inputs:
+      # Optional input for custom Checkov policy file path, if not provided will default to the standard Checkov policies
+      # Allows customers to user thier own custom policy.
+      checkov_custom_policy_file_path:
+        required: false
+        type: string
+        default: "false"
       higher_branch:
         required: false
         type: string
@@ -30,10 +36,12 @@ on:
       environments:
         required: true
         type: string
+      #e.g. aws, azure, gcp
       cloud_provider:
         required: true
         type: string
     secrets:
+      # for az or gcp auth
       cloud_token:
         required: false
       aws_region:
@@ -123,7 +131,8 @@ jobs:
       higher_branch: ${{ inputs.higher_branch }}
       cloud_provider: ${{ inputs.cloud_provider }}
       iac_technology_version: ${{ inputs.iac_technology_version }}
-      repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}     
+      repo_terragrunt_version: ${{ inputs.repo_terragrunt_version }}
+      checkov_custom_policy_file_path: ${{ inputs.checkov_custom_policy_file_path }}     
     secrets:
       cloud_token: ${{ secrets.cloud_token || '' }}
       aws_region: ${{ secrets.aws_region || '' }}

@@ -3,6 +3,17 @@
 Checkov is utilised for quality checks.
 Terragrunt is required in your project set up, it is used for deployment and drift detection.
 
+**Permissions**
+The following permissions will need to be configured on the caller repo.
+
+```
+permissions:
+  pull-requests: write
+  actions: read
+  security-events: write
+  contents: read
+```
+
 **Supports**
 Terraform
 Terragrunt
@@ -85,14 +96,18 @@ environments: |
 
 ***AWS Auth***
     
-    aws_region - This key should be the default AWS region.
+    ```aws_region``` - This key should be the default AWS region.
     
-    aws_secret_access_key - AWS IAM secret access key.
+    ```aws_secret_access_key``` - AWS IAM secret access key.
     
-    aws_access_key_id - ID of the relavent access key
+    ```aws_access_key_id``` - ID of the relavent access key
 
-***GCP&AZURE**
+***GCP***
     ```cloud_token``` - Access token for the cloud provider in question.
+
+***Azure***
+    ```cloud_token``` - Please congifure as a service principle secret.
+                      - https://github.com/marketplace/actions/azure-login
 
 **Design**
 <img width="648" height="1098" alt="diss pipeline drawio" src="https://github.com/user-attachments/assets/327d89ad-285e-49b5-b114-1a5b97ac3ee5" />
