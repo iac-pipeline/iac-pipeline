@@ -1,4 +1,3 @@
-comment_marker=$1
 body_to_post=$(cat << EOF
 <!-- ${comment_marker} -->
 ### $body_message_to_post ###
