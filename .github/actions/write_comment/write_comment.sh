@@ -1,13 +1,3 @@
-#!/bin/bash
-body_to_post=""
-if [ -z "$custom_plan_location" ]; then
-echo "Error: custom_plan_location is not set"
-body_to_post=$(cat << EOF
-<!-- ${comment_marker} -->
-### $body_message_to_post ###
-EOF
-  ) 
-else
 
 body_to_post=$(cat << EOF
 <!-- ${comment_marker} -->
@@ -15,9 +5,6 @@ body_to_post=$(cat << EOF
 $(cat "$custom_plan_location")
 EOF
 )
-fi
-
-
 
 set -e
 echo "$body_to_post"

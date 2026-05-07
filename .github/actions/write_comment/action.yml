@@ -3,7 +3,7 @@ description: 'Writes a comment on the pull request'
 inputs:
   custom_plan_location:
     description: 'The location of the plan output file'
-    required: false
+    required: true
   custom_body_message:
     description: 'The message to be input into the body'
     required: true
