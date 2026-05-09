@@ -124,7 +124,7 @@ jobs:
   call_terraform_quality_checks:
     needs: initialise_workflow
     if: needs.initialise_workflow.outputs.run_cd_checks == 'false'
-    uses: iac-pipeline/iac-pipeline/.github/workflows/terraform_quality_checks.yml@develop
+    uses: iac-pipeline/iac-pipeline/.github/workflows/terraform_quality_checks.yml@main
     with:
       branch: ${{ inputs.branch }}
       iac_technology: ${{ needs.initialise_workflow.outputs.iac_technology }}
@@ -142,7 +142,7 @@ jobs:
 
   call-drift-detection:
     needs: initialise_workflow
-    uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@develop
+    uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@main
     with:
       branch: ${{ inputs.branch }}
       higher_branch: ${{ inputs.higher_branch }}
@@ -165,7 +165,7 @@ jobs:
   call-apply:
     needs: [initialise_workflow, call-drift-detection]
     if: needs.initialise_workflow.outputs.run_cd_checks == 'true' 
-    uses: iac-pipeline/iac-pipeline/.github/workflows/apply_iac.yml@develop
+    uses: iac-pipeline/iac-pipeline/.github/workflows/apply_iac.yml@main
     with:
       production_branch: ${{ inputs.higher_branch }}
       production_environment: ${{ needs.initialise_workflow.outputs.higher_environment }}

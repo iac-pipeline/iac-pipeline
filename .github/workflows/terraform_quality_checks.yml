@@ -62,7 +62,7 @@ jobs:
         run: pip install checkov
       
       - name: authenticate to cloud provider
-        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@develop
+        uses: iac-pipeline/iac-pipeline/.github/actions/basic_setup@main
         with:
           cloud_provider: ${{ inputs.cloud_provider }}
           iac_technology: ${{ inputs.iac_technology }}
