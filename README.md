@@ -20,6 +20,7 @@ Terragrunt
 Amazon Web Services
 Google Cloud
 Azure
+Checkov
 
 **Setup**
 This project can be called from another repositorys workflow.
@@ -91,6 +92,9 @@ environments: |
 ```iac_technology_version``` This key allows for the version of choice for the users IaC language to be utilised.  Defaults to "1.7.5".
 
 ```repo_terragrunt_version``` This key allows for a version of terragrunt to be utilised. Defaults to "0.99.1"
+
+```checkov_custom_policy_file_path``` This key allows for custom checkov policys to be used in the same directory. Set this value to the filepath from route for the policy file. Only Yaml policys are supported by the pipeline.
+                                      
 
 ***Secrets***
 
