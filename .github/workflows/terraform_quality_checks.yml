@@ -3,6 +3,9 @@ run-name: Running quality checks for ${{ github.actor }}
 on:
   workflow_call:
     inputs:
+      checkov_custom_policy_file_path:
+        required: true
+        type: string
       branch:
         required: true
         type: string
@@ -78,13 +81,6 @@ jobs:
           echo "plan_exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
         continue-on-error: true
 
-      
-      # - name: feedback plan to pr
-      #   uses: iac-pipeline/iac-pipeline/.github/actions/write_comment@main
-      #   with:
-      #       custom_body_message: "IaC Plan"
-      #       custom_plan_location: "${{env.FILE_PATH_PLAN_TEXT}}"
-      #       comment_marker: "generic_plan_feedback"
 
       # utilising artifact due to api size constraints
       - uses: actions/upload-artifact@v4
@@ -98,7 +94,11 @@ jobs:
       - name: Run Checkov against Terraform code
         id: run_checkov
         run: | 
-          checkov -d . --output sarif --framework terraform --output-file-path /tmp/ --repo-root-for-plan-enrichment .
+          if [ "${{ inputs.checkov_custom_policy_file_path }}" != "false" ]; then
+            checkov -d . --external-checks-dir "${{ inputs.checkov_custom_policy_file_path }}" --output sarif  --output-file-path /tmp/ --repo-root-for-plan-enrichment .
+          else
+            checkov -d . --output sarif --framework terraform --output-file-path /tmp/ --repo-root-for-plan-enrichment .
+          fi
         continue-on-error: true
 
       - name: show sarif file

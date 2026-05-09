@@ -48,6 +48,15 @@ runs:
     with:
       creds: ${{ inputs.cloud_token_secret_name }}
     if: ${{ inputs.cloud_provider == 'Azure' }}
+  
+  - name: set arm variables for terragrunt
+    shell: bash
+    run: |
+      echo "ARM_CLIENT_ID=$(echo '${{ inputs.cloud_token_secret_name }}' | jq -r .clientId)" >> $GITHUB_ENV
+      echo "ARM_CLIENT_SECRET=$(echo '${{ inputs.cloud_token_secret_name }}' | jq -r .clientSecret)" >> $GITHUB_ENV
+      echo "ARM_SUBSCRIPTION_ID=$(echo '${{ inputs.cloud_token_secret_name }}' | jq -r .subscriptionId)" >> $GITHUB_ENV
+       echo "ARM_TENANT_ID=$(echo '${{ inputs.cloud_token_secret_name }}' | jq -r .tenantId)" >> $GITHUB_ENV
+    if: ${{ inputs.cloud_provider == 'Azure' }}
 
   - name: Set up python 3.9
     uses: actions/setup-python@v4
