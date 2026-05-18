@@ -75,7 +75,7 @@ jobs:
       
       - name: check for drift
         id: check_state_of_environment
-        uses: iac-pipeline/iac-pipeline/.github/actions/drift_detection@main
+        uses: iac-pipeline/iac-pipeline/.github/actions/drift_detection@hoftfix/error_handling
         with:
           branch: ${{ inputs.branch }}
           higher_branch: ${{ inputs.higher_branch }}
