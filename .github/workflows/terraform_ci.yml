@@ -142,7 +142,7 @@ jobs:
 
   call-drift-detection:
     needs: initialise_workflow
-    uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@hoftfix/error_handling
+    uses: iac-pipeline/iac-pipeline/.github/workflows/check_for_drift.yml@main
     with:
       branch: ${{ inputs.branch }}
       higher_branch: ${{ inputs.higher_branch }}
