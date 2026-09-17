@@ -114,5 +114,6 @@ environments: |
                       - https://github.com/marketplace/actions/azure-login
 
 **Design**
+
 <img width="648" height="1098" alt="diss pipeline drawio" src="https://github.com/user-attachments/assets/327d89ad-285e-49b5-b114-1a5b97ac3ee5" />
 
